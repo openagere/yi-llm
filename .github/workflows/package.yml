@@ -1,7 +1,6 @@
 name: Build Windows package
 
 on:
-  workflow_dispatch:
   push:
     tags:
       - "v*"
@@ -15,6 +14,7 @@ concurrency:
 
 jobs:
   package:
+    if: github.ref_type == 'tag' && startsWith(github.ref_name, 'v')
     name: Windows x64 package
     runs-on: windows-2022
     timeout-minutes: 45
@@ -61,7 +61,7 @@ jobs:
 
   release:
     name: Publish GitHub release
-    if: startsWith(github.ref, 'refs/tags/v')
+    if: github.ref_type == 'tag' && startsWith(github.ref_name, 'v')
     needs: package
     runs-on: ubuntu-24.04
     timeout-minutes: 10
