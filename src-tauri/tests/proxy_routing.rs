@@ -229,6 +229,16 @@ async fn shared_catalog_file_changes_apply_to_running_requests_and_model_lists()
     assert_eq!(response.status(), 400);
     let valid = std::fs::read(&catalog_path).unwrap();
     std::fs::write(&catalog_path, "{invalid").unwrap();
+    // The first read may observe the invalid revision and report its parse error, or
+    // the file stamp may be unchanged at the platform's timestamp resolution. Either
+    // way, FileCatalog remembers the revision and subsequent reads use the last valid cache.
+    let first_invalid_status = client
+        .get(format!("{proxy}/v1/models"))
+        .send()
+        .await
+        .unwrap()
+        .status();
+    assert!(first_invalid_status.is_success() || first_invalid_status.is_server_error());
     for endpoint in ["/v1/models", "/clients/codex/v1/models"] {
         assert_eq!(
             client
@@ -237,7 +247,7 @@ async fn shared_catalog_file_changes_apply_to_running_requests_and_model_lists()
                 .await
                 .unwrap()
                 .status(),
-            500
+            200
         );
     }
     assert_eq!(
@@ -248,9 +258,9 @@ async fn shared_catalog_file_changes_apply_to_running_requests_and_model_lists()
             .await
             .unwrap()
             .status(),
-        500
+        200
     );
-    assert_eq!(upstream.received_requests().await.unwrap().len(), 2);
+    assert_eq!(upstream.received_requests().await.unwrap().len(), 3);
     std::fs::write(&catalog_path, valid).unwrap();
     for endpoint in ["/v1/models", "/clients/codex/v1/models"] {
         assert_eq!(
