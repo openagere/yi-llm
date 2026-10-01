@@ -1,0 +1,33 @@
+/* Content headers are deliberately flat: no glass, glow, or nested action boxes. */
+.workspace-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  min-height: 48px;
+  margin-bottom: 12px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+.workspace-header-identity { display: flex; align-items: flex-start; gap: 12px; min-width: 0; }
+.workspace-header-copy { display: grid; gap: 5px; min-width: 0; }
+.workspace-header-context { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.workspace-header h1 { margin: 0; font-size: 23px; font-weight: 500; line-height: 1.25; letter-spacing: -.025em; }
+.workspace-header-copy > p { max-width: 720px; margin: 0; color: var(--text-muted); font-size: 12px; line-height: 1.5; }
+.workspace-header-actions, .workspace-header-tools, .workspace-header-primary, .workspace-header-dismiss { display: flex; flex: none; align-items: center; }
+.workspace-header-actions { gap: 10px; padding-top: 2px; }
+.workspace-header-tools { gap: 3px; }
+.workspace-header .icon-button { width: 34px; height: 34px; min-height: 34px; border: 0; border-radius: 8px; background: transparent; }
+.workspace-header .icon-button:hover:not(:disabled) { color: var(--text-primary); background: var(--surface-hover); }
+.workspace-header .workspace-header-back { margin-top: 1px; margin-left: -6px; }
+.workspace-header .workspace-header-primary .primary-button { width: auto; min-width: 0; min-height: 32px; padding: 0 14px; border-radius: 9px; background: var(--surface-inverse); font-size: 12px; box-shadow: none; }
+.workspace-header .workspace-header-primary .primary-button:hover:not(:disabled) { opacity: .88; }
+
+@media (max-width: 680px) {
+  .workspace-header { flex-wrap: wrap; gap: 16px; min-height: 0; margin-bottom: 25px; }
+  .workspace-header-identity { gap: 8px; }
+  .workspace-header h1 { font-size: 24px; }
+  .workspace-header-copy > p { font-size: 12px; }
+  .workspace-header-actions { margin-left: auto; gap: 6px; }
+}

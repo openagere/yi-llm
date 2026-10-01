@@ -1,0 +1,257 @@
+{
+  "$schema": "./catalog.schema.json",
+  "version": 1,
+  "models": [
+    {
+      "id": "imported-39",
+      "name": "DeepSeek-V4.1-Flash",
+      "protocol": "responses",
+      "brand": "",
+      "capabilities": {
+        "input_modalities": [
+          "text",
+          "image"
+        ],
+        "output_modalities": null,
+        "context_window": 1048576,
+        "max_output_tokens": null,
+        "effort": {
+          "support": "supported",
+          "levels": [
+            "low",
+            "medium",
+            "high",
+            "xhigh",
+            "max",
+            "ultra"
+          ],
+          "default": null
+        }
+      }
+    },
+    {
+      "id": "176fb8db-e79c-4d1d-add1-8a4c3f595d6a",
+      "name": "glm-5.3",
+      "protocol": "responses",
+      "brand": "",
+      "capabilities": {
+        "input_modalities": [
+          "text"
+        ],
+        "output_modalities": [
+          "text"
+        ],
+        "context_window": 1048576,
+        "max_output_tokens": null,
+        "effort": {
+          "support": "supported",
+          "levels": [
+            "low",
+            "high",
+            "max"
+          ],
+          "default": null
+        }
+      }
+    },
+    {
+      "id": "imported-40",
+      "name": "GLM-5.3-Flash",
+      "protocol": "responses",
+      "brand": "",
+      "capabilities": {
+        "input_modalities": [
+          "text",
+          "image"
+        ],
+        "output_modalities": null,
+        "context_window": 1048576,
+        "max_output_tokens": null,
+        "effort": {
+          "support": "supported",
+          "levels": [
+            "low",
+            "medium",
+            "high",
+            "xhigh",
+            "max",
+            "ultra"
+          ],
+          "default": null
+        }
+      }
+    },
+    {
+      "id": "aef24515-7bac-4a37-b5bc-c8870b503961",
+      "name": "gpt-5.6-luna",
+      "protocol": "responses",
+      "brand": "",
+      "capabilities": {
+        "input_modalities": [
+          "text",
+          "image"
+        ],
+        "output_modalities": [
+          "text"
+        ],
+        "context_window": 1048576,
+        "max_output_tokens": null,
+        "effort": {
+          "support": "supported",
+          "levels": [
+            "low",
+            "medium",
+            "high",
+            "xhigh",
+            "max",
+            "ultra"
+          ],
+          "default": null
+        }
+      }
+    },
+    {
+      "id": "02417f20-a685-4a2d-ac1d-d12fc69c54d4",
+      "name": "gpt-6-luna",
+      "protocol": "responses",
+      "brand": "",
+      "capabilities": {
+        "input_modalities": [
+          "text",
+          "image"
+        ],
+        "output_modalities": [
+          "text"
+        ],
+        "context_window": 1048576,
+        "max_output_tokens": null,
+        "effort": {
+          "support": "supported",
+          "levels": [
+            "low",
+            "medium",
+            "high",
+            "xhigh",
+            "max",
+            "ultra"
+          ],
+          "default": null
+        }
+      }
+    },
+    {
+      "id": "c8e4ea25-a534-4aa6-be66-cd752b9c1f9e",
+      "name": "gpt-6-sol",
+      "protocol": "responses",
+      "brand": "",
+      "capabilities": {
+        "input_modalities": [
+          "text",
+          "image"
+        ],
+        "output_modalities": [
+          "text"
+        ],
+        "context_window": 1048576,
+        "max_output_tokens": null,
+        "effort": {
+          "support": "supported",
+          "levels": [
+            "low",
+            "medium",
+            "high",
+            "xhigh",
+            "max",
+            "ultra"
+          ],
+          "default": null
+        }
+      }
+    },
+    {
+      "id": "d9e2ad98-5fdf-4298-8462-f06c8aae94e3",
+      "name": "kimi-k2.8-preview",
+      "protocol": "responses",
+      "brand": "",
+      "capabilities": {
+        "input_modalities": [
+          "text",
+          "image"
+        ],
+        "output_modalities": [
+          "text"
+        ],
+        "context_window": 1048576,
+        "max_output_tokens": null,
+        "effort": {
+          "support": "supported",
+          "levels": [
+            "low",
+            "medium",
+            "high",
+            "xhigh",
+            "max",
+            "ultra"
+          ],
+          "default": null
+        }
+      }
+    },
+    {
+      "id": "caba0e13-b875-41d2-9cb3-ac12a817236b",
+      "name": "LongCat-2.5-Preview",
+      "protocol": "anthropic",
+      "brand": "",
+      "capabilities": {
+        "input_modalities": [
+          "text",
+          "image"
+        ],
+        "output_modalities": [
+          "text"
+        ],
+        "context_window": 1048576,
+        "max_output_tokens": null,
+        "effort": {
+          "support": "supported",
+          "levels": [
+            "low",
+            "medium",
+            "high",
+            "xhigh",
+            "max",
+            "ultracode"
+          ],
+          "default": null
+        }
+      }
+    },
+    {
+      "id": "imported-37",
+      "name": "LongCat-2.5-Preview",
+      "protocol": "responses",
+      "brand": "",
+      "capabilities": {
+        "input_modalities": [
+          "text",
+          "image"
+        ],
+        "output_modalities": null,
+        "context_window": 1048576,
+        "max_output_tokens": null,
+        "effort": {
+          "support": "supported",
+          "levels": [
+            "low",
+            "medium",
+            "high",
+            "xhigh",
+            "max",
+            "ultra"
+          ],
+          "default": null
+        }
+      }
+    }
+  ]
+}

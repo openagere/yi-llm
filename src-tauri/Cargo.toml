@@ -1,0 +1,69 @@
+[package]
+name = "yi-llm"
+version = "0.1.0"
+description = "Local multi-protocol LLM gateway and management desktop app"
+authors = ["peng.yi"]
+license = "MIT"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[lib]
+# The `_lib` suffix may seem redundant but it is necessary
+# to make the lib name unique and wouldn't conflict with the bin name.
+# This seems to be only an issue on Windows, see https://github.com/rust-lang/cargo/issues/8519
+name = "yi_llm"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "3.0.0-alpha.2", features = [] }
+
+[dependencies]
+tauri = { version = "3.0.0-alpha.3", features = [] }
+tauri-runtime-wry = "3.0.0-alpha.1"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tokio = { version = "1", features = ["full"] }
+axum = "0.8"
+reqwest = { version = "0.12", default-features = false, features = ["stream", "json", "rustls-tls", "http2"] }
+rusqlite = { version = "0.37", features = ["bundled"] }
+tracing = "0.1"
+tracing-appender = "0.2"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "fmt"] }
+thiserror = "2"
+futures = "0.3"
+eventsource-stream = "0.2"
+tokio-stream = "0.1"
+bytes = "1"
+async-stream = "0.3"
+toml_edit = "0.25"
+json5 = "0.4"
+tempfile = "3"
+r2d2 = "0.8.10"
+arc-swap = "1.9.2"
+r2d2_sqlite = "0.31"
+
+[lints.rust]
+unsafe_code = "forbid"
+unused_must_use = "deny"
+
+[lints.clippy]
+all = { level = "warn", priority = -1 }
+needless_pass_by_value = "warn"
+redundant_clone = "warn"
+uninlined_format_args = "warn"
+manual_let_else = "warn"
+
+[dev-dependencies]
+wiremock = "0.6"
+tokio-test = "0.4"
+pretty_assertions = "1"
+
+
+# Read the optimization guideline for more details: https://tauri.app/concept/size/#cargo-configuration
+[profile.release]
+codegen-units = 1
+lto = true
+opt-level = 3
+panic = "abort"
+strip = true

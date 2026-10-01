@@ -1,0 +1,1064 @@
+[
+  {
+    "id": "9527code",
+    "label": "9527CODE",
+    "keywords": [
+      "9527code",
+      "9527",
+      "codes",
+      "aggregator",
+      "relay",
+      "gateway"
+    ],
+    "file": "9527code.svg",
+    "monochrome": true
+  },
+  {
+    "id": "huoshan",
+    "label": "火山方舟",
+    "aliases": ["volcengine", "ark", "火山引擎", "火山"],
+    "keywords": [
+      "huoshan",
+      "volcengine",
+      "ark",
+      "agentplan",
+      "byteplus"
+    ],
+    "file": "huoshan.png"
+  },
+  {
+    "id": "qiniu",
+    "label": "七牛云",
+    "keywords": [
+      "qiniu",
+      "qnaigc",
+      "modelink",
+      "aggregator",
+      "relay",
+      "claude",
+      "codex",
+      "gpt",
+      "gemini",
+      "gateway"
+    ],
+    "file": "qiniu.png"
+  },
+  {
+    "id": "qianwenai",
+    "label": "千问AI平台",
+    "keywords": [
+      "qianwenai",
+      "qianwen",
+      "qwen",
+      "aliyun",
+      "alibaba"
+    ],
+    "file": "qianwenai.svg"
+  },
+  {
+    "id": "a6api",
+    "label": "A6API",
+    "keywords": [
+      "a6api",
+      "a6",
+      "aggregator",
+      "relay",
+      "gateway",
+      "claude"
+    ],
+    "file": "a6api.png"
+  },
+  {
+    "id": "aicodemirror",
+    "label": "aicodemirror",
+    "keywords": [],
+    "file": "aicodemirror.svg"
+  },
+  {
+    "id": "aicodewith",
+    "label": "AICodeWith",
+    "keywords": [
+      "aicodewith",
+      "ai code with",
+      "aggregator",
+      "relay",
+      "gateway",
+      "claude",
+      "codex",
+      "gemini"
+    ],
+    "file": "aicodewith.svg"
+  },
+  {
+    "id": "aicoding",
+    "label": "aicoding",
+    "keywords": [],
+    "file": "aicoding.svg"
+  },
+  {
+    "id": "aigocode",
+    "label": "AIGoCode",
+    "keywords": [
+      "aigocode",
+      "aigo",
+      "code",
+      "third-party"
+    ],
+    "file": "aigocode.svg"
+  },
+  {
+    "id": "aihubmix",
+    "label": "AiHubMix",
+    "keywords": [
+      "aihubmix",
+      "hub",
+      "mix",
+      "aggregator"
+    ],
+    "file": "aihubmix.svg"
+  },
+  {
+    "id": "alibaba",
+    "label": "Alibaba",
+    "keywords": [
+      "qwen",
+      "tongyi"
+    ],
+    "file": "alibaba.svg"
+  },
+  {
+    "id": "amux",
+    "label": "Amux",
+    "keywords": [
+      "amux",
+      "amuxapi",
+      "aggregator",
+      "relay",
+      "gateway",
+      "gpt"
+    ],
+    "file": "amux.svg",
+    "monochrome": true
+  },
+  {
+    "id": "anthropic",
+    "label": "Anthropic",
+    "keywords": [
+      "claude"
+    ],
+    "file": "anthropic.svg",
+    "monochrome": true
+  },
+  {
+    "id": "apikeyfun",
+    "label": "APIKEY.FUN",
+    "keywords": [
+      "apikeyfun",
+      "api key",
+      "gateway",
+      "relay",
+      "claude",
+      "codex",
+      "gemini"
+    ],
+    "file": "apikeyfun.png"
+  },
+  {
+    "id": "apinebula",
+    "label": "APINebula",
+    "keywords": [
+      "apinebula",
+      "api nebula",
+      "gateway",
+      "relay",
+      "claude",
+      "codex",
+      "gemini"
+    ],
+    "file": "apinebula.png"
+  },
+  {
+    "id": "atlascloud",
+    "label": "AtlasCloud",
+    "keywords": [
+      "atlascloud",
+      "atlas cloud",
+      "coding plan",
+      "openai",
+      "anthropic",
+      "codex",
+      "claude"
+    ],
+    "file": "atlascloud.png"
+  },
+  {
+    "id": "aws",
+    "label": "AWS",
+    "keywords": [
+      "amazon",
+      "cloud"
+    ],
+    "file": "aws.svg"
+  },
+  {
+    "id": "azure",
+    "label": "Azure",
+    "keywords": [
+      "microsoft",
+      "cloud"
+    ],
+    "file": "azure.svg"
+  },
+  {
+    "id": "baidu",
+    "label": "Baidu",
+    "keywords": [
+      "ernie",
+      "wenxin"
+    ],
+    "file": "baidu.svg"
+  },
+  {
+    "id": "bailian",
+    "label": "Bailian",
+    "keywords": [
+      "bailian",
+      "dashscope",
+      "aliyun",
+      "alibaba"
+    ],
+    "file": "bailian.svg"
+  },
+  {
+    "id": "bytedance",
+    "label": "bytedance",
+    "keywords": [],
+    "file": "bytedance.svg"
+  },
+  {
+    "id": "byteplus",
+    "label": "BytePlus",
+    "keywords": [
+      "byteplus",
+      "volcengine",
+      "ark",
+      "modelark"
+    ],
+    "file": "byteplus.png"
+  },
+  {
+    "id": "catcoder",
+    "label": "catcoder",
+    "keywords": [],
+    "file": "catcoder.svg",
+    "monochrome": true
+  },
+  {
+    "id": "ccsub",
+    "label": "CCSub",
+    "keywords": [
+      "ccsub",
+      "aggregator",
+      "relay",
+      "claude",
+      "codex",
+      "gateway"
+    ],
+    "file": "ccsub.svg"
+  },
+  {
+    "id": "chatglm",
+    "label": "chatglm",
+    "keywords": [],
+    "file": "chatglm.svg"
+  },
+  {
+    "id": "cherryin",
+    "label": "CherryIN",
+    "keywords": [
+      "cherryin",
+      "cherry",
+      "gateway",
+      "relay",
+      "newapi",
+      "claude",
+      "codex"
+    ],
+    "file": "cherryin.png"
+  },
+  {
+    "id": "claude",
+    "label": "Claude",
+    "keywords": [
+      "anthropic"
+    ],
+    "file": "claude.svg"
+  },
+  {
+    "id": "claudeapi",
+    "label": "ClaudeAPI",
+    "keywords": [
+      "claudeapi",
+      "claude",
+      "anthropic",
+      "bedrock"
+    ],
+    "file": "claudeapi.png"
+  },
+  {
+    "id": "claudecn",
+    "label": "ClaudeCN",
+    "keywords": [
+      "claudecn",
+      "claude",
+      "enterprise"
+    ],
+    "file": "claudecn.png"
+  },
+  {
+    "id": "cloudflare",
+    "label": "Cloudflare",
+    "keywords": [
+      "cloudflare",
+      "cdn"
+    ],
+    "file": "cloudflare.svg"
+  },
+  {
+    "id": "code0",
+    "label": "Code0",
+    "keywords": [
+      "code0",
+      "code0ai",
+      "aggregator",
+      "relay",
+      "gateway",
+      "gpt"
+    ],
+    "file": "code0.png"
+  },
+  {
+    "id": "cohere",
+    "label": "Cohere",
+    "keywords": [
+      "cohere"
+    ],
+    "file": "cohere.svg"
+  },
+  {
+    "id": "copilot",
+    "label": "copilot",
+    "keywords": [],
+    "file": "copilot.svg"
+  },
+  {
+    "id": "crazyrouter",
+    "label": "crazyrouter",
+    "keywords": [],
+    "file": "crazyrouter.svg",
+    "monochrome": true
+  },
+  {
+    "id": "cubence",
+    "label": "Cubence",
+    "keywords": [
+      "cubence",
+      "api",
+      "relay"
+    ],
+    "file": "cubence.svg"
+  },
+  {
+    "id": "deepseek",
+    "label": "DeepSeek",
+    "keywords": [
+      "deep",
+      "seek"
+    ],
+    "file": "deepseek.svg"
+  },
+  {
+    "id": "doubao",
+    "label": "doubao",
+    "keywords": [],
+    "file": "doubao.svg"
+  },
+  {
+    "id": "eflowcode",
+    "label": "E-FlowCode",
+    "keywords": [
+      "eflowcode",
+      "e-flowcode",
+      "flow"
+    ],
+    "file": "eflowcode.png"
+  },
+  {
+    "id": "etok",
+    "label": "ETok",
+    "keywords": [
+      "etok",
+      "ai",
+      "programming"
+    ],
+    "file": "etok.png"
+  },
+  {
+    "id": "fenno",
+    "label": "FennoAI",
+    "keywords": [
+      "fenno",
+      "fennoai",
+      "aggregator",
+      "relay",
+      "claude",
+      "codex",
+      "gpt",
+      "gateway"
+    ],
+    "file": "fenno.webp"
+  },
+  {
+    "id": "fluxa",
+    "label": "FluxA",
+    "keywords": [
+      "fluxa",
+      "fluxapay",
+      "agentmarket",
+      "tokenplan",
+      "marketplace"
+    ],
+    "file": "fluxa.png"
+  },
+  {
+    "id": "gemini",
+    "label": "Gemini",
+    "keywords": [
+      "google"
+    ],
+    "file": "gemini.svg"
+  },
+  {
+    "id": "gemma",
+    "label": "gemma",
+    "keywords": [],
+    "file": "gemma.svg"
+  },
+  {
+    "id": "github",
+    "label": "GitHub",
+    "keywords": [
+      "git",
+      "version control"
+    ],
+    "file": "github.svg"
+  },
+  {
+    "id": "githubcopilot",
+    "label": "githubcopilot",
+    "keywords": [],
+    "file": "githubcopilot.svg",
+    "monochrome": true
+  },
+  {
+    "id": "google",
+    "label": "Google",
+    "keywords": [
+      "gemini",
+      "bard"
+    ],
+    "file": "google.svg"
+  },
+  {
+    "id": "googlecloud",
+    "label": "googlecloud",
+    "keywords": [],
+    "file": "googlecloud.svg"
+  },
+  {
+    "id": "grok",
+    "label": "grok",
+    "keywords": [],
+    "file": "grok.svg",
+    "monochrome": true
+  },
+  {
+    "id": "hermes",
+    "label": "Hermes",
+    "keywords": [
+      "hermes",
+      "agent",
+      "nous",
+      "nousresearch"
+    ],
+    "file": "hermes.png"
+  },
+  {
+    "id": "huawei",
+    "label": "Huawei",
+    "keywords": [
+      "huawei",
+      "cloud"
+    ],
+    "file": "huawei.svg"
+  },
+  {
+    "id": "huggingface",
+    "label": "Hugging Face",
+    "keywords": [
+      "huggingface",
+      "hf"
+    ],
+    "file": "huggingface.svg"
+  },
+  {
+    "id": "hunyuan",
+    "label": "hunyuan",
+    "keywords": [],
+    "file": "hunyuan.svg"
+  },
+  {
+    "id": "jiekou",
+    "label": "JieKou AI",
+    "keywords": [
+      "jiekou",
+      "jiekou ai",
+      "interface ai",
+      "aggregator"
+    ],
+    "file": "jiekou.svg"
+  },
+  {
+    "id": "kimi",
+    "label": "Kimi",
+    "keywords": [
+      "moonshot"
+    ],
+    "file": "kimi.svg"
+  },
+  {
+    "id": "lioncc",
+    "label": "LionCC",
+    "keywords": [
+      "lioncc",
+      "lion"
+    ],
+    "file": "lioncc.svg"
+  },
+  {
+    "id": "longcat",
+    "label": "LongCat",
+    "keywords": [
+      "longcat",
+      "long",
+      "cat"
+    ],
+    "file": "longcat.svg"
+  },
+  {
+    "id": "mcp",
+    "label": "mcp",
+    "keywords": [],
+    "file": "mcp.svg",
+    "monochrome": true
+  },
+  {
+    "id": "meta",
+    "label": "Meta",
+    "keywords": [
+      "facebook",
+      "llama"
+    ],
+    "file": "meta.svg"
+  },
+  {
+    "id": "micu",
+    "label": "micu",
+    "keywords": [],
+    "file": "micu.svg"
+  },
+  {
+    "id": "midjourney",
+    "label": "midjourney",
+    "keywords": [],
+    "file": "midjourney.svg",
+    "monochrome": true
+  },
+  {
+    "id": "minimax",
+    "label": "MiniMax",
+    "keywords": [
+      "minimax"
+    ],
+    "file": "minimax.svg"
+  },
+  {
+    "id": "mistral",
+    "label": "Mistral",
+    "keywords": [
+      "mistral"
+    ],
+    "file": "mistral.svg"
+  },
+  {
+    "id": "modelscope",
+    "label": "ModelScope",
+    "keywords": [
+      "modelscope",
+      "alibaba",
+      "scope"
+    ],
+    "file": "modelscope.svg"
+  },
+  {
+    "id": "nekocode",
+    "label": "NekoCode",
+    "keywords": [
+      "nekocode",
+      "neko",
+      "aggregator",
+      "relay",
+      "gateway",
+      "gpt"
+    ],
+    "file": "nekocode.png"
+  },
+  {
+    "id": "newapi",
+    "label": "newapi",
+    "keywords": [],
+    "file": "newapi.svg"
+  },
+  {
+    "id": "notion",
+    "label": "notion",
+    "keywords": [],
+    "file": "notion.svg",
+    "monochrome": true
+  },
+  {
+    "id": "novita",
+    "label": "Novita AI",
+    "keywords": [
+      "novita",
+      "novita ai"
+    ],
+    "file": "novita.svg"
+  },
+  {
+    "id": "nvidia",
+    "label": "NVIDIA",
+    "keywords": [
+      "nvidia",
+      "nim",
+      "gpu"
+    ],
+    "file": "nvidia.svg"
+  },
+  {
+    "id": "ollama",
+    "label": "ollama",
+    "keywords": [],
+    "file": "ollama.svg",
+    "monochrome": true
+  },
+  {
+    "id": "openai",
+    "label": "OpenAI",
+    "keywords": [
+      "gpt",
+      "chatgpt"
+    ],
+    "file": "openai.svg",
+    "monochrome": true
+  },
+  {
+    "id": "openclaw",
+    "label": "OpenClaw",
+    "keywords": [
+      "openclaw",
+      "lobster",
+      "claw"
+    ],
+    "file": "openclaw.svg"
+  },
+  {
+    "id": "opencode",
+    "label": "opencode",
+    "keywords": [],
+    "file": "opencode.svg"
+  },
+  {
+    "id": "openrouter",
+    "label": "OpenRouter",
+    "keywords": [
+      "openrouter",
+      "router",
+      "aggregator"
+    ],
+    "file": "openrouter.svg",
+    "monochrome": true
+  },
+  {
+    "id": "packycode",
+    "label": "PackyCode",
+    "keywords": [
+      "packycode",
+      "packy",
+      "packyapi"
+    ],
+    "file": "packycode.svg",
+    "monochrome": true
+  },
+  {
+    "id": "palm",
+    "label": "palm",
+    "keywords": [],
+    "file": "palm.svg"
+  },
+  {
+    "id": "pateway",
+    "label": "PatewayAI",
+    "keywords": [
+      "pateway",
+      "patewayai",
+      "claude",
+      "codex"
+    ],
+    "file": "pateway.jpg"
+  },
+  {
+    "id": "perplexity",
+    "label": "Perplexity",
+    "keywords": [
+      "perplexity"
+    ],
+    "file": "perplexity.svg"
+  },
+  {
+    "id": "pi",
+    "label": "pi",
+    "keywords": [],
+    "file": "pi.svg",
+    "monochrome": true
+  },
+  {
+    "id": "pipellm",
+    "label": "PIPELLM",
+    "keywords": [
+      "pipellm",
+      "pipe"
+    ],
+    "file": "pipellm.png"
+  },
+  {
+    "id": "ppio",
+    "label": "PPIO",
+    "keywords": [
+      "ppio",
+      "派欧云"
+    ],
+    "file": "ppio.svg"
+  },
+  {
+    "id": "qwen",
+    "label": "qwen",
+    "keywords": [],
+    "file": "qwen.svg"
+  },
+  {
+    "id": "qwencloud",
+    "label": "QwenCloud",
+    "keywords": [
+      "qwencloud",
+      "qwen",
+      "aliyun",
+      "alibaba"
+    ],
+    "file": "qwencloud.svg"
+  },
+  {
+    "id": "rc",
+    "label": "rc",
+    "keywords": [],
+    "file": "rc.svg"
+  },
+  {
+    "id": "relaxcode",
+    "label": "RelaxyCode",
+    "keywords": [
+      "relaxycode",
+      "relaxcode",
+      "relax"
+    ],
+    "file": "relaxcode.png"
+  },
+  {
+    "id": "runapi",
+    "label": "RunAPI",
+    "keywords": [
+      "runapi",
+      "run",
+      "aggregator",
+      "gateway"
+    ],
+    "file": "runapi.jpg"
+  },
+  {
+    "id": "shengsuanyun",
+    "label": "Shengsuanyun",
+    "keywords": [
+      "shengsuanyun",
+      "shengsuanyun"
+    ],
+    "file": "shengsuanyun.svg"
+  },
+  {
+    "id": "siliconflow",
+    "label": "siliconflow",
+    "keywords": [],
+    "file": "siliconflow.svg"
+  },
+  {
+    "id": "soleapi",
+    "label": "SoleAPI",
+    "keywords": [
+      "soleapi",
+      "sole",
+      "aggregator",
+      "relay",
+      "gateway",
+      "claude"
+    ],
+    "file": "soleapi.svg",
+    "monochrome": true
+  },
+  {
+    "id": "soshow",
+    "label": "Soshow",
+    "keywords": [
+      "soshow",
+      "so-show",
+      "model market",
+      "aggregator",
+      "claude"
+    ],
+    "file": "soshow.png"
+  },
+  {
+    "id": "sssaicode",
+    "label": "sssaicode",
+    "keywords": [],
+    "file": "sssaicode.svg"
+  },
+  {
+    "id": "stability",
+    "label": "stability",
+    "keywords": [],
+    "file": "stability.svg"
+  },
+  {
+    "id": "stepfun",
+    "label": "StepFun",
+    "keywords": [
+      "stepfun",
+      "step",
+      "jieyue",
+      "阶跃星辰"
+    ],
+    "file": "stepfun.svg"
+  },
+  {
+    "id": "sub2api",
+    "label": "Sub2API",
+    "keywords": [
+      "sub2api",
+      "sub2",
+      "aggregator",
+      "relay",
+      "gateway",
+      "claude",
+      "codex",
+      "gemini"
+    ],
+    "file": "sub2api.svg"
+  },
+  {
+    "id": "subrouter",
+    "label": "SubRouter",
+    "keywords": [
+      "subrouter",
+      "subrouter.ai",
+      "aggregator",
+      "relay",
+      "claude",
+      "codex",
+      "gemini",
+      "gateway"
+    ],
+    "file": "subrouter.svg"
+  },
+  {
+    "id": "sudocode",
+    "label": "SudoCode.chat",
+    "keywords": [
+      "sudocode",
+      "sudo code",
+      "chat",
+      "gateway",
+      "relay",
+      "claude",
+      "codex",
+      "gemini",
+      "openclaw"
+    ],
+    "file": "sudocode.png"
+  },
+  {
+    "id": "sudocode-us",
+    "label": "SudoCode.us",
+    "keywords": [
+      "sudocode",
+      "sudo code",
+      "us",
+      "gateway",
+      "relay",
+      "claude",
+      "codex",
+      "gemini",
+      "openclaw"
+    ],
+    "file": "sudocode-us.png"
+  },
+  {
+    "id": "teamorouter",
+    "label": "TeamoRouter",
+    "keywords": [
+      "teamorouter",
+      "teamo",
+      "router",
+      "aggregator",
+      "relay",
+      "gateway",
+      "gpt"
+    ],
+    "file": "teamorouter.png"
+  },
+  {
+    "id": "tencent",
+    "label": "Tencent",
+    "keywords": [
+      "hunyuan"
+    ],
+    "file": "tencent.svg"
+  },
+  {
+    "id": "ucloud",
+    "label": "ucloud",
+    "keywords": [],
+    "file": "ucloud.svg"
+  },
+  {
+    "id": "unity2",
+    "label": "Unity2.ai",
+    "keywords": [
+      "unity2",
+      "aggregator",
+      "relay",
+      "claude",
+      "codex",
+      "gateway"
+    ],
+    "file": "unity2.png"
+  },
+  {
+    "id": "vercel",
+    "label": "vercel",
+    "keywords": [],
+    "file": "vercel.svg",
+    "monochrome": true
+  },
+  {
+    "id": "wenxin",
+    "label": "wenxin",
+    "keywords": [],
+    "file": "wenxin.svg"
+  },
+  {
+    "id": "xai",
+    "label": "xai",
+    "keywords": [],
+    "file": "xai.svg",
+    "monochrome": true
+  },
+  {
+    "id": "xiaomimimo",
+    "label": "Xiaomi MiMo",
+    "keywords": [
+      "xiaomimimo",
+      "xiaomi",
+      "mimo"
+    ],
+    "file": "xiaomimimo.svg",
+    "monochrome": true
+  },
+  {
+    "id": "xycai",
+    "label": "XycAi",
+    "keywords": [
+      "xycai",
+      "xyc",
+      "aggregator",
+      "relay",
+      "gateway",
+      "token"
+    ],
+    "file": "xycai.png"
+  },
+  {
+    "id": "yi",
+    "label": "yi",
+    "keywords": [],
+    "file": "yi.svg"
+  },
+  {
+    "id": "zenmux",
+    "label": "ZenMux",
+    "keywords": [
+      "zenmux",
+      "zen",
+      "mux"
+    ],
+    "file": "zenmux.svg"
+  },
+  {
+    "id": "zeroone",
+    "label": "zeroone",
+    "keywords": [],
+    "file": "zeroone.svg",
+    "monochrome": true
+  },
+  {
+    "id": "zetaapi",
+    "label": "ZetaAPI",
+    "keywords": [
+      "zetaapi",
+      "zeta",
+      "aggregator",
+      "relay",
+      "claude",
+      "gpt",
+      "gateway"
+    ],
+    "file": "zetaapi.png"
+  },
+  {
+    "id": "zhipu",
+    "label": "Zhipu AI",
+    "keywords": [
+      "chatglm",
+      "glm"
+    ],
+    "file": "zhipu.svg"
+  }
+]

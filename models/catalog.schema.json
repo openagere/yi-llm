@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "yi-llm Model Catalog",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "models"],
+  "properties": {
+    "$schema": { "type": "string" },
+    "version": { "const": 1 },
+    "models": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "name", "protocol"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "name": { "type": "string", "minLength": 1 },
+          "protocol": { "enum": ["responses", "openai_chat", "anthropic"] },
+          "brand": { "type": "string", "maxLength": 64, "pattern": "^[A-Za-z0-9_-]*$" },
+          "capabilities": { "$ref": "#/$defs/capabilities" }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "modalities": {
+      "type": ["array", "null"],
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "enum": ["text", "image", "audio", "video", "pdf"] }
+    },
+    "tokens": { "type": ["integer", "null"], "minimum": 1, "maximum": 100000000 },
+    "capabilities": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "input_modalities": { "$ref": "#/$defs/modalities" },
+        "output_modalities": { "$ref": "#/$defs/modalities" },
+        "context_window": { "$ref": "#/$defs/tokens" },
+        "max_output_tokens": { "$ref": "#/$defs/tokens" },
+        "effort": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "support": { "enum": ["unknown", "unsupported", "supported"] },
+            "levels": { "type": "array", "uniqueItems": true, "items": { "enum": ["low", "medium", "high", "xhigh", "max", "ultra", "ultracode"] } },
+            "default": { "enum": [null, "low", "medium", "high", "xhigh", "max", "ultra", "ultracode"] }
+          }
+        }
+      }
+    }
+  }
+}
