@@ -1,6 +1,6 @@
 import { supportsTerminal } from "@/features/models";
 import type { ProviderType, ProviderView } from "@/features/providers";
-import type { TerminalClient, TerminalProfile, TerminalSelection } from "./types";
+import type { TerminalClient, TerminalDirectProfile, TerminalProfile, TerminalSelection } from "./types";
 
 export interface TerminalDefinition {
   id: TerminalClient;
@@ -28,6 +28,21 @@ export const groupKey = (client: TerminalClient, providerId: string) => `${clien
 export const providerSelections = (provider: ProviderView): TerminalSelection[] => provider.models.map((model) => ({ provider_id: provider.id, model: model.route_id }));
 
 /** 保留已启用、协议可用且模型能被该终端使用的 Provider。 */
+const DIRECT_PROTOCOLS: Record<TerminalClient, readonly ProviderType[]> = {
+  codex: ["responses"],
+  "claude-code": ["anthropic"],
+  opencode: ["openai_chat", "responses"],
+};
+
+/** Direct access must match the upstream native protocol, not a translated client protocol. */
+export function directCompatibleProviders(providers: readonly ProviderView[], client: TerminalClient): ProviderView[] {
+  return providers.filter((provider) => provider.enabled && DIRECT_PROTOCOLS[client].includes(provider.provider_type));
+}
+
+export function emptyDirectProfile(client: TerminalClient, providerId = ""): TerminalDirectProfile {
+  return { client, provider_id: providerId, model_source: client === "opencode" ? "provider" : "native", model: null };
+}
+
 export function compatibleProviders(providers: readonly ProviderView[], protocol: ProviderType): ProviderView[] {
   return providers
     .filter((provider) => provider.enabled && provider.protocol_support[protocol])

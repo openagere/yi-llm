@@ -2,17 +2,17 @@
 const terminal = {
   terminal: {
     header: {
-      eyebrow: "终端连接",
-      title: "终端接入",
-      closeLabel: "关闭终端接入",
+      eyebrow: "终端管理",
     },
-    tabs: {
-      label: "终端类型",
-      pendingTitle: "{name} · 有未应用的修改",
-      connectedTitle: "{name} · 已接入",
-      disconnectedTitle: "{name} · 未接入",
+    modeTabs: {
+      label: "终端接入方式",
+      proxy: "代理接入",
+      direct: "直连接入",
+      pendingBadge: "待应用",
     },
     status: {
+      proxy: "当前：代理接入",
+      direct: "当前：直连接入",
       loading: "读取中",
       connected: "已接入",
       disconnected: "未接入",
@@ -21,8 +21,31 @@ const terminal = {
     loadError: {
       message: "配置读取失败：",
     },
-    client: {
-      minVersionTitle: "原生自定义模型列表最低版本",
+    proxy: {
+      title: "模型配置",
+      subtitle: "选择 {client} 通过本地代理使用的模型",
+      previewHint: "选择模型后生成配置预览",
+    },
+    direct: {
+      title: "上游连接",
+      subtitle: "选择 Provider 和模型来源",
+      provider: "直连 Provider",
+      chooseProvider: "选择原生协议匹配的 Provider",
+      noProvider: "没有已启用的原生协议 Provider",
+      modelSource: "模型来源",
+      nativeModels: "跟随终端原生模型",
+      nativeModelsHelp: "沿用终端原有模型与默认设置。",
+      providerModels: "使用 Provider 模型",
+      providerModelsHelp: "同步 Provider 维护的全部上游模型。",
+      syncAllTitle: "同步全部上游模型",
+      defaultModelNote: "默认启动模型：{model}",
+      selectProviderHint: "先选择已启用且原生协议匹配的 Provider。",
+      nativeSummary: "由终端选择模型",
+      providerSummary: "{count} 个模型 · 默认 {model}",
+      applying: "正在应用直连配置",
+      apply: "应用直连配置",
+      applied: "{name} 直连配置已更新 · 待终端重启",
+      previewHint: "根据当前选择生成终端配置",
     },
     models: {
       heading: "模型集合",

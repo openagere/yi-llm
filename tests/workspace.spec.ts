@@ -23,13 +23,19 @@ for (const theme of ["light", "dark"] as const) {
       ["模型管理", "模型管理", ".standard-model-row"],
       ["代理运行", "代理运行", ".proxy-monitor-facts"],
       ["模型用量", "模型用量", ".analytics-summary"],
-      ["终端接入", "终端接入", ".terminal-layout"],
+      ["终端管理", "Codex CLI", ".terminal-mode-switch"],
       ["设置", "设置", ".preference-options"],
     ]) {
-      await page.locator(".sidebar").getByRole("button", { name, exact: true }).click();
+      if (name === "终端管理") {
+        const terminalGroup = page.locator(".sidebar").getByRole("button", { name: "终端管理", exact: true });
+        if (await terminalGroup.getAttribute("aria-expanded") !== "true") await terminalGroup.click();
+        await page.locator(".sidebar").getByRole("button", { name: "Codex CLI", exact: true }).click();
+      } else {
+        await page.locator(".sidebar").getByRole("button", { name, exact: true }).click();
+      }
       await expect(page.locator("h1:visible")).toHaveText(title);
       await expect(page.locator(ready).first()).toBeVisible();
-      if (name === "终端接入") await expect(page.locator(".terminal-preview")).toContainText('model_provider = "yi"');
+      if (name === "终端管理") await expect(page.locator(".terminal-preview")).toContainText('model_provider = "yi"');
       await expectFits(page);
       await page.screenshot({ path: testInfo.outputPath(`${name}.png`) });
     }
@@ -45,9 +51,15 @@ for (const theme of ["light", "dark"] as const) {
       await page.locator(".sidebar").getByRole("button", { name: "连接", exact: true }).click();
       await expectFits(page);
       await page.screenshot({ path: testInfo.outputPath(`providers-${viewport.width}.png`) });
-      for (const name of ["模型管理", "代理运行", "模型用量", "终端接入", "设置"]) {
+      for (const name of ["模型管理", "代理运行", "模型用量", "终端管理", "设置"]) {
+      if (name === "终端管理") {
+        const terminalGroup = page.locator(".sidebar").getByRole("button", { name: "终端管理", exact: true });
+        if (await terminalGroup.getAttribute("aria-expanded") !== "true") await terminalGroup.click();
+        await page.locator(".sidebar").getByRole("button", { name: "Codex CLI", exact: true }).click();
+      } else {
         await page.locator(".sidebar").getByRole("button", { name, exact: true }).click();
-        await expect(page.locator("h1:visible")).toHaveText(name);
+      }
+        await expect(page.locator("h1:visible")).toHaveText(name === "终端管理" ? "Codex CLI" : name);
         await expectFits(page);
       }
     }
@@ -170,10 +182,16 @@ for (const viewport of [{ width: 1120, height: 760 }, { width: 960, height: 640 
     await installBackend(page, "dark", false, false, { native: true, fullPage: true });
     await page.goto("/");
     await expect(page.locator(".connection-row")).toHaveCount(6);
-    for (const [name, ready] of [["连接", ".connection-row"], ["模型管理", ".standard-model-row"], ["代理运行", ".proxy-monitor-facts"], ["模型用量", ".analytics-summary"], ["终端接入", ".terminal-layout"], ["设置", ".preference-options"]]) {
-      await page.locator(".sidebar").getByRole("button", { name, exact: true }).click();
+    for (const [name, ready] of [["连接", ".connection-row"], ["模型管理", ".standard-model-row"], ["代理运行", ".proxy-monitor-facts"], ["模型用量", ".analytics-summary"], ["终端管理", ".terminal-mode-switch"], ["设置", ".preference-options"]]) {
+      if (name === "终端管理") {
+        const terminalGroup = page.locator(".sidebar").getByRole("button", { name: "终端管理", exact: true });
+        if (await terminalGroup.getAttribute("aria-expanded") !== "true") await terminalGroup.click();
+        await page.locator(".sidebar").getByRole("button", { name: "Codex CLI", exact: true }).click();
+      } else {
+        await page.locator(".sidebar").getByRole("button", { name, exact: true }).click();
+      }
       await expect(page.locator(ready).first()).toBeVisible();
-      if (name === "终端接入") await expect(page.locator(".terminal-preview")).toContainText('model_provider = "yi"');
+      if (name === "终端管理") await expect(page.locator(".terminal-preview")).toContainText('model_provider = "yi"');
       await expectFits(page);
       const height = await page.locator(".main-panel").evaluate(el => ({ visible: el.clientHeight, full: el.scrollHeight }));
       await page.screenshot({ path: testInfo.outputPath(`${name}.png`) });
@@ -320,3 +338,206 @@ for (const theme of ["light", "dark"] as const) {
     await expect(page.locator(".workspace-header").getByRole("button", { name: "返回模型管理", exact: true })).toBeVisible();
   });
 }
+
+
+test("terminal management switches between the unchanged proxy profile and direct Provider mode", async ({ page }, testInfo) => {
+  await installBackend(page, "light");
+  await page.goto("/");
+  const terminalGroup = page.locator(".sidebar").getByRole("button", { name: "终端管理", exact: true });
+  if (await terminalGroup.getAttribute("aria-expanded") !== "true") await terminalGroup.click();
+  await page.locator(".sidebar").getByRole("button", { name: "Codex CLI", exact: true }).click();
+  await expect(page.locator("h1:visible")).toHaveText("Codex CLI");
+  await expect(page.getByRole("tablist", { name: "终端接入方式" })).toHaveClass(/terminal-mode-switch/);
+  const tabBounds = await page.getByRole("tablist", { name: "终端接入方式" }).boundingBox();
+  expect(tabBounds!.width, "Access switch should remain compact").toBeLessThanOrEqual(260);
+  expect(tabBounds!.height, "Access switch should remain compact").toBeLessThanOrEqual(42);
+  const headingBounds = await page.locator("h1:visible").boundingBox();
+  expect(tabBounds!.y, "Access tabs should be the first row of the terminal page").toBeLessThan(headingBounds!.y);
+  await expect(page.getByRole("tab", { name: "代理接入" }).locator("svg")).toHaveCount(1);
+  await expect(page.getByRole("tab", { name: "代理接入" })).toHaveAttribute("aria-selected", "true");
+  const modelGroups = page.locator(".terminal-provider-disclosure");
+  await expect(modelGroups).not.toHaveCount(0);
+  expect(await modelGroups.evaluateAll((buttons) => buttons.every((button) => button.getAttribute("aria-expanded") === "false"))).toBe(true);
+  await modelGroups.first().click();
+  await expect(modelGroups.first()).toHaveAttribute("aria-expanded", "true");
+  await page.getByRole("button", { name: "收起全部 Provider" }).click();
+  await expect(modelGroups.first()).toHaveAttribute("aria-expanded", "false");
+  const proxyAction = page.locator(".terminal-header-action").getByRole("button", { name: "更新配置" });
+  await expect(proxyAction.locator("svg.lucide-arrow-up-right")).toHaveCount(1);
+  const proxyActionBounds = await proxyAction.boundingBox();
+  await page.getByRole("tab", { name: "直连接入" }).click();
+  const directAction = page.locator(".terminal-header-action").getByRole("button", { name: "应用直连配置" });
+  await expect(directAction.locator("svg.lucide-arrow-up-right")).toHaveCount(1);
+  const directActionBounds = await directAction.boundingBox();
+  expect(directActionBounds!.y).toBe(proxyActionBounds!.y);
+  expect(directActionBounds!.x + directActionBounds!.width).toBe(proxyActionBounds!.x + proxyActionBounds!.width);
+  await expect(page.getByRole("radio", { name: /跟随终端原生模型/ })).toBeChecked();
+  await page.getByRole("radio", { name: /使用 Provider 模型/ }).check();
+  await expect(page.locator(".terminal-direct-models-panel")).toContainText("同步全部上游模型");
+  await expect(page.locator(".terminal-direct-model-chip")).toHaveText("gpt");
+  await expect(page.locator(".terminal-preview")).toContainText("••••••••");
+  await page.screenshot({ path: testInfo.outputPath("terminal-direct.png") });
+  const applyDirect = page.getByRole("button", { name: "应用直连配置" });
+  await expect(applyDirect).toBeEnabled();
+  await applyDirect.click();
+  await expect(page.locator(".terminal-message")).toContainText("Codex CLI 直连配置已更新");
+  await page.locator(".sidebar").getByRole("button", { name: "设置", exact: true }).click();
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await expect(page.locator("h1:visible")).toHaveText("设置");
+  await page.locator(".sidebar").getByRole("button", { name: "Codex CLI", exact: true }).click();
+  await expect(page.locator(".terminal-mode-state.pending")).toHaveCount(0);
+  await page.getByRole("tab", { name: "代理接入" }).click();
+  await expect(page.locator(".terminal-preview")).toContainText('model_provider = "yi"');
+});
+
+test("terminal child pages keep pending drafts while switching clients", async ({ page }, testInfo) => {
+  await installBackend(page, "dark");
+  await page.goto("/");
+  await page.locator(".sidebar").getByRole("button", { name: "终端管理", exact: true }).click();
+  await page.locator(".sidebar").getByRole("button", { name: "Codex CLI", exact: true }).click();
+  await page.getByRole("tab", { name: "直连接入" }).click();
+  await page.getByRole("radio", { name: /使用 Provider 模型/ }).check();
+  await expect(page.getByRole("tab", { name: "直连接入" }).locator(".terminal-mode-state")).toHaveClass(/pending/);
+
+  await page.locator(".sidebar").getByRole("button", { name: "Claude Code", exact: true }).click();
+  await expect(page.locator("h1:visible")).toHaveText("Claude Code");
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await expect(page.getByRole("tablist", { name: "终端接入方式" })).toHaveClass(/terminal-mode-switch/);
+  await page.getByRole("tab", { name: "直连接入" }).click();
+  await expect(page.getByRole("radio", { name: /跟随终端原生模型/ })).toBeChecked();
+  await page.screenshot({ path: testInfo.outputPath("terminal-claude-direct-dark.png") });
+
+  await page.locator(".sidebar").getByRole("button", { name: "OpenCode", exact: true }).click();
+  await expect(page.locator("h1:visible")).toHaveText("OpenCode");
+  await page.getByRole("tab", { name: "直连接入" }).click();
+  await expect(page.locator(".terminal-direct-models-panel")).toBeVisible();
+  await expect(page.getByRole("radiogroup", { name: "模型来源" })).toHaveCount(0);
+
+  await page.locator(".sidebar").getByRole("button", { name: "Codex CLI", exact: true }).click();
+  await expect(page.getByRole("radio", { name: /使用 Provider 模型/ })).toBeChecked();
+  await page.locator(".sidebar").getByRole("button", { name: "设置", exact: true }).click();
+  await expect(page.getByRole("dialog")).toBeVisible();
+});
+
+test("leaving an unchanged terminal does not warn about another terminal's draft", async ({ page }) => {
+  await installBackend(page, "light");
+  await page.goto("/");
+  await page.locator(".sidebar").getByRole("button", { name: "终端管理", exact: true }).click();
+  await page.locator(".sidebar").getByRole("button", { name: "Codex CLI", exact: true }).click();
+  await page.getByRole("tab", { name: "直连接入" }).click();
+  await page.getByRole("radio", { name: /使用 Provider 模型/ }).check();
+  await expect(page.getByRole("tab", { name: "直连接入" }).locator(".terminal-mode-state.pending")).toBeVisible();
+
+  for (const name of ["Claude Code", "OpenCode"]) {
+    await page.locator(".sidebar").getByRole("button", { name, exact: true }).click();
+    await expect(page.getByRole("dialog")).toHaveCount(0);
+  }
+  await page.locator(".sidebar").getByRole("button", { name: "设置", exact: true }).click();
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await expect(page.locator("h1:visible")).toHaveText("设置");
+});
+
+test("terminal preview keeps long configuration inside a scrollable pane", async ({ page }) => {
+  await installBackend(page, "light");
+  await page.goto("/");
+  await page.locator(".sidebar").getByRole("button", { name: "终端管理", exact: true }).click();
+  await page.locator(".sidebar").getByRole("button", { name: "Codex CLI", exact: true }).click();
+  await page.getByRole("tab", { name: "直连接入" }).click();
+  await expect(page.locator(".terminal-preview")).toContainText("model_provider");
+  const preview = page.locator(".terminal-preview");
+  await preview.locator("code").evaluate((element) => { element.textContent = "model = long-preview\n".repeat(100); });
+  const size = await preview.evaluate((element) => ({
+    height: element.getBoundingClientRect().height,
+    scrollHeight: element.scrollHeight,
+    overflowY: getComputedStyle(element).overflowY,
+  }));
+  expect(size.height).toBeLessThanOrEqual(500);
+  expect(size.scrollHeight).toBeGreaterThan(size.height);
+  expect(size.overflowY).toBe("auto");
+});
+
+test("direct terminal layout stays usable in a narrow window", async ({ page }, testInfo) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await installBackend(page, "light");
+  await page.goto("/");
+  await page.getByRole("button", { name: "展开或收起侧栏" }).click();
+  await page.locator(".sidebar").getByRole("button", { name: "终端管理", exact: true }).click();
+  await page.locator(".sidebar").getByRole("button", { name: "Codex CLI", exact: true }).click();
+  await page.getByRole("tab", { name: "直连接入" }).click();
+  const apply = page.getByRole("button", { name: "应用直连配置" });
+  await expect(apply).toBeEnabled();
+  const nativeApplyY = (await apply.boundingBox())!.y;
+  await page.getByRole("radio", { name: /使用 Provider 模型/ }).check();
+  await expect(page.locator(".terminal-direct-models-panel")).toBeVisible();
+  await expect(apply).toBeEnabled();
+  expect(Math.abs((await apply.boundingBox())!.y - nativeApplyY)).toBeLessThanOrEqual(1);
+  const actionBounds = await page.locator(".terminal-header-action").boundingBox();
+  const previewBounds = await page.locator(".terminal-direct-layout > .terminal-preview-section").boundingBox();
+  expect(actionBounds!.y, "Apply action precedes preview in the narrow layout").toBeLessThan(previewBounds!.y);
+  await expectFits(page);
+  await page.screenshot({ path: testInfo.outputPath("terminal-direct-narrow.png") });
+});
+
+test("applying a proxy terminal draft clears the leave-page guard", async ({ page }) => {
+  await installBackend(page, "light");
+  await page.goto("/");
+  await page.locator(".sidebar").getByRole("button", { name: "终端管理", exact: true }).click();
+  await page.locator(".sidebar").getByRole("button", { name: "Codex CLI", exact: true }).click();
+  await page.getByRole("button", { name: "全选", exact: true }).click();
+  await expect(page.getByRole("tab", { name: "代理接入" }).locator(".terminal-mode-state.pending")).toBeVisible();
+  const applyProxy = page.getByRole("button", { name: "更新配置" });
+  await expect(applyProxy).toBeEnabled();
+  await applyProxy.click();
+  await expect(page.locator(".terminal-message")).toContainText("Codex CLI 配置已更新");
+  await page.locator(".sidebar").getByRole("button", { name: "设置", exact: true }).click();
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await expect(page.locator("h1:visible")).toHaveText("设置");
+});
+
+for (const viewport of [{ width: 1120, height: 760 }, { width: 960, height: 640 }]) {
+  test(`direct apply action stays in place without desktop scrolling at ${viewport.width}x${viewport.height}`, async ({ page }) => {
+    await page.setViewportSize(viewport);
+    await installBackend(page, "light");
+    await page.goto("/");
+    await page.locator(".sidebar").getByRole("button", { name: "终端管理", exact: true }).click();
+    await page.locator(".sidebar").getByRole("button", { name: "Codex CLI", exact: true }).click();
+    await page.getByRole("tab", { name: "直连接入" }).click();
+
+    const apply = page.getByRole("button", { name: "应用直连配置" });
+    const fitsVertically = async () => {
+      const panel = await page.locator(".main-panel").evaluate((element) => ({ visible: element.clientHeight, content: element.scrollHeight }));
+      expect(panel.content, "Direct access should fit without a page scrollbar").toBeLessThanOrEqual(panel.visible + 1);
+    };
+    await expect(apply).toBeEnabled();
+    const nativeY = (await apply.boundingBox())!.y;
+    await fitsVertically();
+
+    await page.getByRole("radio", { name: /使用 Provider 模型/ }).check();
+    await expect(page.locator(".terminal-direct-models-panel")).toBeVisible();
+    expect(Math.abs((await apply.boundingBox())!.y - nativeY), "Apply action should not move while preview loads").toBeLessThanOrEqual(1);
+    await expect(apply).toBeEnabled();
+    expect(Math.abs((await apply.boundingBox())!.y - nativeY), "Apply action should not move after preview loads").toBeLessThanOrEqual(1);
+    await fitsVertically();
+
+    await page.getByRole("radio", { name: /跟随终端原生模型/ }).check();
+    expect(Math.abs((await apply.boundingBox())!.y - nativeY)).toBeLessThanOrEqual(1);
+    await fitsVertically();
+  });
+}
+
+test("direct Provider shows every upstream model without clipping the action", async ({ page }, testInfo) => {
+  await installBackend(page, "light", false, false, { manyModels: true });
+  await page.goto("/");
+  await page.locator(".sidebar").getByRole("button", { name: "终端管理", exact: true }).click();
+  await page.locator(".sidebar").getByRole("button", { name: "Codex CLI", exact: true }).click();
+  await page.getByRole("tab", { name: "直连接入" }).click();
+  const apply = page.getByRole("button", { name: "应用直连配置" });
+  const initialY = (await apply.boundingBox())!.y;
+  await page.getByRole("radio", { name: /使用 Provider 模型/ }).check();
+  await expect(page.locator(".terminal-direct-model-chip")).toHaveCount(5);
+  await expect(page.locator(".terminal-direct-model-chips")).toContainText("gpt-fast");
+  await expect(page.locator(".terminal-direct-model-more")).toHaveCount(0);
+  await expect(apply).toBeEnabled();
+  expect((await apply.boundingBox())!.y).toBe(initialY);
+  await page.screenshot({ path: testInfo.outputPath("direct-all-models.png") });
+});

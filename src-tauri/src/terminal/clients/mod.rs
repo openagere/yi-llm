@@ -3,7 +3,10 @@ mod codex;
 mod opencode;
 
 use crate::{
-    domain::terminal::Profile,
+    domain::{
+        provider::ProviderView,
+        terminal::{DirectProfile, Profile},
+    },
     error::{AppError, Result},
     terminal::{changes::FileChange, resolve::ResolvedModel},
 };
@@ -21,6 +24,14 @@ pub struct PlanInput<'a> {
     pub endpoint: &'a str,
 }
 
+pub struct DirectPlanInput<'a> {
+    pub profile: &'a DirectProfile,
+    pub provider: &'a ProviderView,
+    pub proxy_profile: Option<&'a Profile>,
+    pub previous_direct_profile: Option<&'a DirectProfile>,
+    pub previous_direct_provider: Option<&'a ProviderView>,
+}
+
 /// Files a configurator wants written: side files first, then the main config content.
 pub struct Built {
     pub extra: Vec<FileChange>,
@@ -34,8 +45,72 @@ pub trait ClientConfigurator: Sync {
     /// Whether `source` (the current config file content) already points at `endpoint`.
     fn is_active(&self, path: &Path, source: &str, endpoint: &str) -> Result<bool>;
     fn build(&self, input: &PlanInput<'_>, path: &Path, source: &str) -> Result<Built>;
+    fn build_direct(&self, input: &DirectPlanInput<'_>, path: &Path, source: &str)
+        -> Result<Built>;
+    fn owned_direct_preview(&self, content: &[u8]) -> Result<String>;
+    fn is_direct_active(
+        &self,
+        path: &Path,
+        source: &str,
+        profile: &DirectProfile,
+        provider: &ProviderView,
+    ) -> Result<bool>;
     /// The main config reduced to the settings yi owns, safe to show to the user.
     fn owned_preview(&self, content: &[u8]) -> Result<String>;
+}
+
+pub fn redact_endpoint(value: &str) -> String {
+    let query_at = value.find('?');
+    let fragment_at = value.find('#');
+    let end = [query_at, fragment_at]
+        .into_iter()
+        .flatten()
+        .min()
+        .unwrap_or(value.len());
+    let mut safe = value[..end].to_owned();
+    if let Some(scheme_end) = safe.find("://") {
+        let authority_start = scheme_end + 3;
+        let authority_end = safe[authority_start..]
+            .find('/')
+            .map_or(safe.len(), |offset| authority_start + offset);
+        if let Some(userinfo_end) = safe[authority_start..authority_end].rfind('@') {
+            safe.replace_range(authority_start..authority_start + userinfo_end + 1, "");
+        }
+    }
+    if query_at.is_some() {
+        safe.push_str("?…");
+    }
+    safe
+}
+
+/// Startup model for `model_source == "provider"`. Every maintained upstream model is
+/// always written to the terminal config; an explicitly stored model ID wins, otherwise
+/// the provider's first upstream model becomes the startup default.
+pub fn direct_startup_model<'a>(
+    profile: &'a DirectProfile,
+    provider: &'a ProviderView,
+) -> Result<&'a str> {
+    if let Some(model) = profile
+        .model
+        .as_deref()
+        .map(str::trim)
+        .filter(|model| !model.is_empty())
+    {
+        return Ok(model);
+    }
+    provider
+        .models
+        .first()
+        .map(|model| model.upstream_model.as_str())
+        .filter(|model| !model.is_empty())
+        .ok_or_else(|| AppError::validation("该 Provider 尚未维护上游模型，无法使用 Provider 模型"))
+}
+pub fn direct_provider_id(provider_id: &str) -> String {
+    let safe: String = provider_id
+        .chars()
+        .map(|ch| if ch.is_ascii_alphanumeric() { ch } else { '_' })
+        .collect();
+    format!("yi_direct_{safe}")
 }
 
 pub fn configurator(client: &str) -> Result<&'static dyn ClientConfigurator> {

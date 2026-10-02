@@ -4,12 +4,17 @@
 mod apply;
 mod changes;
 mod clients;
+mod direct;
 mod plan;
 mod profile;
 mod resolve;
 
-pub use crate::domain::terminal::{protocol, Profile, Selection, CLIENTS};
+pub use crate::domain::terminal::{protocol, DirectProfile, Profile, Selection, CLIENTS};
 pub use apply::{apply, apply_at, preview, preview_at, ApplyResult, Preview, PreviewFile};
+pub use direct::{
+    active as direct_active, apply as apply_direct, apply_at as apply_direct_at,
+    preview as preview_direct, preview_at as preview_direct_at,
+};
 pub use plan::{config_path, endpoint, status, Status};
 pub use profile::{load, save};
 pub use resolve::{

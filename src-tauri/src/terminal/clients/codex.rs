@@ -1,4 +1,7 @@
-use super::{table, user_home, Built, ClientConfigurator, PlanInput};
+use super::{
+    direct_provider_id, direct_startup_model, table, user_home, Built, ClientConfigurator,
+    DirectPlanInput, PlanInput,
+};
 use crate::{
     domain::capabilities::{Modality, Support},
     error::{AppError, Result},
@@ -72,6 +75,20 @@ impl ClientConfigurator for Codex {
         let legacy_catalog_owned = legacy_owned
             && doc.get("model_catalog_json").and_then(Item::as_str)
                 == Some(legacy_catalog_path.to_string_lossy().as_ref());
+        if let Some(providers) = doc.get_mut("model_providers").and_then(Item::as_table_mut) {
+            let direct_ids: Vec<String> = providers
+                .iter()
+                .filter(|(_, item)| {
+                    item.get("name")
+                        .and_then(Item::as_str)
+                        .is_some_and(|name| name.starts_with("yi-llm direct:"))
+                })
+                .map(|(id, _)| id.to_string())
+                .collect();
+            for id in direct_ids {
+                providers.remove(&id);
+            }
+        }
         if legacy_owned {
             if let Some(providers) = doc.get_mut("model_providers").and_then(Item::as_table_mut) {
                 providers.remove("llm-man");
@@ -176,6 +193,207 @@ impl ClientConfigurator for Codex {
             extra: files,
             main: doc.to_string().into_bytes(),
         })
+    }
+
+    fn build_direct(
+        &self,
+        input: &DirectPlanInput<'_>,
+        path: &Path,
+        source: &str,
+    ) -> Result<Built> {
+        let provider = &input.provider.provider;
+        let mut doc = if source.is_empty() {
+            DocumentMut::new()
+        } else {
+            parse_toml(source, "Codex TOML 无法解析: ")?
+        };
+        let catalog_path = path.with_file_name("yi-codex-direct-models.json");
+        let proxy_owned = doc.get("model_provider").and_then(Item::as_str) == Some("yi")
+            && doc
+                .get("model_providers")
+                .and_then(|items| items.get("yi"))
+                .and_then(|item| item.get("name"))
+                .and_then(Item::as_str)
+                == Some("yi");
+        let prior_provider = doc
+            .get("model_provider")
+            .and_then(Item::as_str)
+            .unwrap_or_default()
+            .to_owned();
+        let prior_direct_owned = prior_provider.starts_with("yi_direct_")
+            && doc
+                .get("model_providers")
+                .and_then(|items| items.get(&prior_provider))
+                .and_then(|item| item.get("name"))
+                .and_then(Item::as_str)
+                .is_some_and(|name| name.starts_with("yi-llm direct:"));
+        let managed_source = proxy_owned || prior_direct_owned;
+        if managed_source {
+            doc.remove("model");
+            doc.remove("model_reasoning_effort");
+            if doc
+                .get("model_catalog_json")
+                .and_then(Item::as_str)
+                .is_some_and(|catalog| {
+                    catalog == path.with_file_name("yi-models.json").to_string_lossy()
+                        || catalog
+                            == path
+                                .with_file_name("yi-codex-direct-models.json")
+                                .to_string_lossy()
+                })
+            {
+                doc.remove("model_catalog_json");
+            }
+            if let Some(tables) = doc.get_mut("model_providers").and_then(Item::as_table_mut) {
+                tables.remove("yi");
+            }
+        }
+        let id = direct_provider_id(&provider.id);
+        let provider_tables = table(doc.as_table_mut(), "model_providers")?;
+        if let Some(existing) = provider_tables.get(&id) {
+            let owned = existing.get("name").and_then(Item::as_str)
+                == Some(format!("yi-llm direct:{}:{}", provider.id, provider.name).as_str());
+            if !owned {
+                return Err(AppError::conflict(format!(
+                    "Codex Provider 标识 {id} 已被其他配置占用"
+                )));
+            }
+        }
+        let entry = table(provider_tables, &id)?;
+        entry["name"] = value(format!("yi-llm direct:{}:{}", provider.id, provider.name));
+        entry["base_url"] = value(provider.base_url.trim_end_matches('/'));
+        entry["wire_api"] = value("responses");
+        entry["requires_openai_auth"] = value(false);
+        if provider.api_key.trim().is_empty() {
+            entry.remove("experimental_bearer_token");
+        } else {
+            entry["experimental_bearer_token"] = value(&provider.api_key);
+        }
+        for key in [
+            "env_key",
+            "env_key_instructions",
+            "http_headers",
+            "env_http_headers",
+        ] {
+            entry.remove(key);
+        }
+        doc["model_provider"] = value(&id);
+
+        let mut extra = Vec::new();
+        if input.profile.model_source == "provider" {
+            let selected = direct_startup_model(input.profile, input.provider)?;
+            let mut seen = std::collections::HashSet::new();
+            let mut models: Vec<Value> = input.provider.models.iter().filter_map(|model| {
+                let slug = model.upstream_model.trim();
+                if slug.is_empty() || !seen.insert(slug.to_owned()) { return None; }
+                let caps = &model.capabilities;
+                let levels = caps.efforts_for("responses", &provider.provider_type);
+                Some(json!({
+                    "slug":slug,"display_name":slug,"description":format!("{} · {}",provider.name,slug),
+                    "supported_reasoning_levels":levels.iter().map(|level| json!({"effort":level,"description":format!("{level} effort")})).collect::<Vec<_>>(),
+                    "default_reasoning_level":caps.effort.default.as_ref().filter(|level| levels.contains(level)),
+                    "shell_type":"default","visibility":"list","supported_in_api":true,"priority":seen.len()-1,
+                    "availability_nux":null,"upgrade":null,"base_instructions":BASE_INSTRUCTIONS,
+                    "supports_reasoning_summaries":false,"support_verbosity":false,"default_verbosity":null,
+                    "apply_patch_tool_type":null,"truncation_policy":{"mode":"bytes","limit":10000},
+                    "supports_parallel_tool_calls":false,"experimental_supported_tools":[],
+                    "input_modalities":caps.input_for("responses", &provider.provider_type).into_iter().filter(|modality| matches!(modality, Modality::Text | Modality::Image)).collect::<Vec<_>>()
+                }))
+            }).collect();
+            if !seen.contains(selected) {
+                models.push(json!({"slug":selected,"display_name":selected,"description":format!("{} · {selected}",provider.name),"supported_reasoning_levels":[],"default_reasoning_level":null,"shell_type":"default","visibility":"list","supported_in_api":true,"priority":models.len(),"availability_nux":null,"upgrade":null,"base_instructions":BASE_INSTRUCTIONS,"supports_reasoning_summaries":false,"support_verbosity":false,"default_verbosity":null,"apply_patch_tool_type":null,"truncation_policy":{"mode":"bytes","limit":10000},"supports_parallel_tool_calls":false,"experimental_supported_tools":[],"input_modalities":["text"]}));
+            }
+            doc["model"] = value(selected);
+            doc["model_catalog_json"] = value(catalog_path.display().to_string());
+            extra.push(FileChange::new(
+                catalog_path,
+                serde_json::to_vec_pretty(&json!({"models":models}))?,
+            )?);
+        } else {
+            if managed_source {
+                doc.remove("model");
+                doc.remove("model_reasoning_effort");
+            }
+            if doc.get("model_catalog_json").and_then(Item::as_str)
+                == Some(
+                    path.with_file_name("yi-codex-direct-models.json")
+                        .to_string_lossy()
+                        .as_ref(),
+                )
+            {
+                doc.remove("model_catalog_json");
+            }
+        }
+        Ok(Built {
+            extra,
+            main: doc.to_string().into_bytes(),
+        })
+    }
+
+    fn owned_direct_preview(&self, content: &[u8]) -> Result<String> {
+        let doc = parse_toml(&String::from_utf8_lossy(content), "")?;
+        let mut owned = DocumentMut::new();
+        for key in ["model", "model_provider", "model_catalog_json"] {
+            if let Some(item) = doc.get(key) {
+                owned[key] = item.clone();
+            }
+        }
+        owned["model_providers"] = Item::Table(Table::new());
+        if let Some(tables) = doc.get("model_providers").and_then(Item::as_table) {
+            for (id, provider) in tables.iter() {
+                if provider
+                    .get("name")
+                    .and_then(Item::as_str)
+                    .is_some_and(|name| name.starts_with("yi-llm direct:"))
+                {
+                    let mut redacted = Table::new();
+                    for key in [
+                        "name",
+                        "base_url",
+                        "wire_api",
+                        "requires_openai_auth",
+                        "env_key",
+                    ] {
+                        if let Some(item) = provider.get(key) {
+                            redacted[key] = item.clone();
+                        }
+                    }
+                    if let Some(endpoint) = provider.get("base_url").and_then(Item::as_str) {
+                        redacted["base_url"] = value(super::redact_endpoint(endpoint));
+                    }
+                    if provider.get("experimental_bearer_token").is_some() {
+                        redacted["experimental_bearer_token"] = value("••••••••");
+                    }
+                    owned["model_providers"][id] = Item::Table(redacted);
+                }
+            }
+        }
+        Ok(owned.to_string())
+    }
+
+    fn is_direct_active(
+        &self,
+        _path: &Path,
+        source: &str,
+        profile: &crate::domain::terminal::DirectProfile,
+        provider: &crate::domain::provider::ProviderView,
+    ) -> Result<bool> {
+        let doc = parse_toml(source, "Codex TOML 无法解析: ")?;
+        let id = direct_provider_id(&profile.provider_id);
+        let provider_table = doc.get("model_providers").and_then(|items| items.get(&id));
+        let key_matches = provider.provider.api_key.trim().is_empty()
+            || provider_table
+                .and_then(|item| item.get("experimental_bearer_token"))
+                .and_then(Item::as_str)
+                == Some(provider.provider.api_key.as_str());
+        Ok(
+            doc.get("model_provider").and_then(Item::as_str) == Some(id.as_str())
+                && provider_table
+                    .and_then(|item| item.get("base_url"))
+                    .and_then(Item::as_str)
+                    == Some(provider.provider.base_url.trim_end_matches('/'))
+                && key_matches,
+        )
     }
 
     fn owned_preview(&self, content: &[u8]) -> Result<String> {

@@ -40,6 +40,15 @@ body { min-width: 320px; background: var(--app-bg); }
 .provider-nav.selected::before { display: none; }
 .provider-nav svg, .provider-nav.selected svg { flex: none; color: currentColor; }
 .provider-nav-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.nav-terminal-group { display: grid; gap: 2px; }
+.nav-terminal-toggle { font-weight: 500; }
+.nav-terminal-toggle > svg:last-child { flex: none; color: var(--text-muted); }
+.nav-terminal-items { display: grid; gap: 1px; margin: 1px 0 3px; padding-left: 14px; border-left: 1px solid var(--border); }
+.nav-terminal-item { min-height: 32px; padding-left: 11px; font-size: 12px; }
+.nav-terminal-dot { flex: none; width: 6px; height: 6px; border-radius: 50%; background: transparent; }
+.nav-terminal-dot.connected { background: var(--success); }
+.nav-terminal-dot.pending { background: var(--warning); }
+
 .nav-count { display: inline-flex; justify-content: center; align-items: center; min-width: 16px; height: auto; padding: 0; border-radius: 0; color: var(--text-muted); background: transparent; font-size: 11px; font-variant-numeric: tabular-nums; }
 .sidebar-no-results { padding: 0 10px; color: var(--text-muted); font-size: 12px; }
 .sidebar-bottom { display: grid; gap: 12px; margin-top: auto; padding-top: 30px; border: 0; }
@@ -67,6 +76,8 @@ h1 { font-weight: 500; }
 .primary-button:hover:not(:disabled) { background: var(--surface-inverse); opacity: .88; }
 .secondary-button { border-color: var(--border-strong); color: var(--text-primary); background: var(--surface); }
 .secondary-button:hover:not(:disabled) { background: var(--surface-subtle); }
+.outline-action-button { display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-height: 34px; padding: 0 13px; border: 1px solid var(--accent-border); border-radius: 8px; background: var(--surface); color: var(--text-primary); font-size: 12px; font-weight: 590; box-shadow: var(--shadow-sm); transition: background .15s, border-color .15s; }
+.outline-action-button:hover:not(:disabled) { border-color: var(--border-strong); background: var(--surface-subtle); }
 .icon-button { border-radius: 7px; color: var(--text-muted); }
 .icon-button:hover:not(:disabled) { color: var(--text-primary); background: var(--surface-hover); }
 .text-button { font-weight: 500; }

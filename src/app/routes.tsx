@@ -21,7 +21,9 @@ const PAGES: Record<Exclude<Page, "proxy">, ComponentType> = {
   "model-list": ModelListPage,
   "model-editor": ModelEditorPage,
   usage: UsagePage,
-  terminal: TerminalPage,
+  "terminal-codex": TerminalPage,
+  "terminal-claude-code": TerminalPage,
+  "terminal-opencode": TerminalPage,
   settings: SettingsPage,
 };
 

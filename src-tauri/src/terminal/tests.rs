@@ -428,3 +428,240 @@ fn provider_code_changes_rewrite_saved_terminal_collections() {
         assert_eq!(route.0.id, "one");
     }
 }
+
+#[test]
+fn codex_direct_native_mode_uses_provider_url_without_replacing_native_models_or_proxy_profile() {
+    let (dir, conn, proxy_profile) = fixture();
+    save(&conn, &proxy_profile).unwrap();
+    let profile = DirectProfile {
+        client: "codex".into(),
+        provider_id: "one".into(),
+        model_source: "native".into(),
+        model: None,
+    };
+    let path = dir.path().join("codex/config.toml");
+    let result = apply_direct_at(&conn, &profile, &path).unwrap();
+    assert_eq!(result.model_count, 1);
+    let source = fs::read_to_string(&path).unwrap();
+    let doc = source.parse::<DocumentMut>().unwrap();
+    assert_eq!(doc["model_provider"].as_str(), Some("yi_direct_one"));
+    assert_eq!(
+        doc["model_providers"]["yi_direct_one"]["base_url"].as_str(),
+        Some("http://localhost")
+    );
+    assert_eq!(
+        doc["model_providers"]["yi_direct_one"]["experimental_bearer_token"].as_str(),
+        Some("secret")
+    );
+    assert_eq!(
+        doc["model_providers"]["yi_direct_one"]["requires_openai_auth"].as_bool(),
+        Some(false)
+    );
+    assert!(doc.get("model").is_none());
+    assert!(doc.get("model_catalog_json").is_none());
+    let saved_proxy = load(&conn, "codex").unwrap().unwrap();
+    assert_eq!(saved_proxy.default_model, proxy_profile.default_model);
+    assert_eq!(saved_proxy.models, proxy_profile.models);
+    assert_eq!(
+        crate::db::repo::terminal_direct_profiles::get(&conn, "codex").unwrap(),
+        Some(profile.clone())
+    );
+    let preview = preview_direct_at(&conn, &profile, &path).unwrap();
+    let content = &preview
+        .files
+        .iter()
+        .find(|file| file.path.ends_with("config.toml"))
+        .unwrap()
+        .content;
+    assert!(!content.contains("secret"));
+    assert!(content.contains("••••••••"));
+    assert!(direct_active(&conn, &profile, &path).unwrap());
+    conn.execute("UPDATE providers SET api_key='rotated' WHERE id='one'", [])
+        .unwrap();
+    assert!(!direct_active(&conn, &profile, &path).unwrap());
+
+    apply_at(&conn, &proxy_profile, &path).unwrap();
+    let proxy_source = fs::read_to_string(&path).unwrap();
+    let proxy_doc = proxy_source.parse::<DocumentMut>().unwrap();
+    assert_eq!(proxy_doc["model_provider"].as_str(), Some("yi"));
+    assert!(proxy_doc["model_providers"].get("yi_direct_one").is_none());
+    assert!(!proxy_source.contains("secret"));
+    assert_eq!(
+        crate::db::repo::terminal_direct_profiles::get(&conn, "codex").unwrap(),
+        Some(profile)
+    );
+}
+
+#[test]
+fn codex_direct_provider_models_write_upstream_ids_to_a_separate_catalog() {
+    let (dir, conn, _) = fixture();
+    let profile = DirectProfile {
+        client: "codex".into(),
+        provider_id: "one".into(),
+        model_source: "provider".into(),
+        model: Some("real-one".into()),
+    };
+    let path = dir.path().join("config.toml");
+    apply_direct_at(&conn, &profile, &path).unwrap();
+    let doc = fs::read_to_string(&path)
+        .unwrap()
+        .parse::<DocumentMut>()
+        .unwrap();
+    assert_eq!(doc["model"].as_str(), Some("real-one"));
+    assert_eq!(
+        doc["model_catalog_json"].as_str(),
+        Some(
+            path.with_file_name("yi-codex-direct-models.json")
+                .to_string_lossy()
+                .as_ref()
+        )
+    );
+    let catalog: Value = serde_json::from_slice(
+        &fs::read(path.with_file_name("yi-codex-direct-models.json")).unwrap(),
+    )
+    .unwrap();
+    assert_eq!(catalog["models"][0]["slug"], "real-one");
+    assert!(!catalog.to_string().contains("real-one(one)"));
+}
+
+#[test]
+fn direct_provider_models_default_to_first_upstream_model_when_unspecified() {
+    let (dir, conn, _) = fixture();
+    let profile = DirectProfile {
+        client: "codex".into(),
+        provider_id: "one".into(),
+        model_source: "provider".into(),
+        model: None,
+    };
+    let path = dir.path().join("config.toml");
+    apply_direct_at(&conn, &profile, &path).unwrap();
+    let doc = fs::read_to_string(&path)
+        .unwrap()
+        .parse::<DocumentMut>()
+        .unwrap();
+    assert_eq!(doc["model"].as_str(), Some("real-one"));
+    let catalog: Value = serde_json::from_slice(
+        &fs::read(path.with_file_name("yi-codex-direct-models.json")).unwrap(),
+    )
+    .unwrap();
+    assert_eq!(catalog["models"][0]["slug"], "real-one");
+    assert_eq!(
+        crate::db::repo::terminal_direct_profiles::get(&conn, "codex").unwrap(),
+        Some(profile)
+    );
+}
+
+#[test]
+fn direct_provider_models_reject_providers_without_maintained_models() {
+    let (dir, conn, _) = fixture();
+    conn.execute("DELETE FROM models WHERE provider_id='one'", [])
+        .unwrap();
+    let profile = DirectProfile {
+        client: "codex".into(),
+        provider_id: "one".into(),
+        model_source: "provider".into(),
+        model: None,
+    };
+    let path = dir.path().join("config.toml");
+    assert!(preview_direct_at(&conn, &profile, &path).is_err());
+    assert!(!path.exists());
+}
+#[test]
+fn direct_preview_endpoint_redacts_userinfo_and_query_parameters() {
+    assert_eq!(
+        crate::terminal::clients::redact_endpoint(
+            "https://user:password@example.test/v1?api_key=secret&region=1#token"
+        ),
+        "https://example.test/v1?…"
+    );
+}
+
+#[test]
+fn direct_modes_require_the_clients_native_upstream_protocol() {
+    let (dir, conn, _) = fixture();
+    conn.execute("UPDATE providers SET type='openai_chat' WHERE id='one'", [])
+        .unwrap();
+    // This provider advertises converted Responses support, but that is not native direct compatibility.
+    let profile = DirectProfile {
+        client: "codex".into(),
+        provider_id: "one".into(),
+        model_source: "native".into(),
+        model: None,
+    };
+    assert!(preview_direct_at(&conn, &profile, &dir.path().join("config.toml")).is_err());
+}
+
+#[test]
+fn claude_and_opencode_direct_configs_use_their_native_provider_shapes_and_redact_keys() {
+    let (dir, conn, mut proxy_profile) = fixture();
+    conn.execute("UPDATE providers SET type='anthropic' WHERE id='one'", [])
+        .unwrap();
+    let claude = DirectProfile {
+        client: "claude-code".into(),
+        provider_id: "one".into(),
+        model_source: "native".into(),
+        model: None,
+    };
+    let claude_path = dir.path().join("claude/settings.json");
+    apply_direct_at(&conn, &claude, &claude_path).unwrap();
+    let claude_doc: Value = serde_json::from_slice(&fs::read(&claude_path).unwrap()).unwrap();
+    assert_eq!(
+        claude_doc
+            .pointer("/env/ANTHROPIC_BASE_URL")
+            .and_then(Value::as_str),
+        Some("http://localhost")
+    );
+    assert_eq!(
+        claude_doc
+            .pointer("/env/ANTHROPIC_AUTH_TOKEN")
+            .and_then(Value::as_str),
+        Some("secret")
+    );
+    assert!(!preview_direct_at(&conn, &claude, &claude_path)
+        .unwrap()
+        .files[0]
+        .content
+        .contains("secret"));
+
+    conn.execute("UPDATE providers SET type='responses' WHERE id='one'", [])
+        .unwrap();
+    let opencode = DirectProfile {
+        client: "opencode".into(),
+        provider_id: "one".into(),
+        model_source: "provider".into(),
+        model: Some("real-one".into()),
+    };
+    let opencode_path = dir.path().join("opencode/opencode.json");
+    apply_direct_at(&conn, &opencode, &opencode_path).unwrap();
+    let opencode_doc: Value = serde_json::from_slice(&fs::read(&opencode_path).unwrap()).unwrap();
+    assert_eq!(
+        opencode_doc["provider"]["yi_direct_one"]["npm"],
+        "@ai-sdk/openai"
+    );
+    assert_eq!(
+        opencode_doc["provider"]["yi_direct_one"]["options"]["baseURL"],
+        "http://localhost"
+    );
+    assert_eq!(opencode_doc["model"], "yi_direct_one/real-one");
+    assert!(!preview_direct_at(&conn, &opencode, &opencode_path)
+        .unwrap()
+        .files[0]
+        .content
+        .contains("secret"));
+    assert!(direct_active(&conn, &opencode, &opencode_path).unwrap());
+    conn.execute("UPDATE providers SET api_key='rotated' WHERE id='one'", [])
+        .unwrap();
+    assert!(!direct_active(&conn, &opencode, &opencode_path).unwrap());
+
+    proxy_profile.client = "opencode".into();
+    apply_at(&conn, &proxy_profile, &opencode_path).unwrap();
+    let proxy_source = fs::read_to_string(&opencode_path).unwrap();
+    let proxy_doc: Value = serde_json::from_str(&proxy_source).unwrap();
+    assert_eq!(proxy_doc["model"], "yi/real-one(one)");
+    assert!(proxy_doc["provider"].get("yi_direct_one").is_none());
+    assert!(!proxy_source.contains("secret"));
+    assert_eq!(
+        crate::db::repo::terminal_direct_profiles::get(&conn, "opencode").unwrap(),
+        Some(opencode)
+    );
+}

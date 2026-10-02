@@ -4,17 +4,17 @@ import type zh from "../zh-CN/terminal";
 const terminal: DeepString<typeof zh> = {
   terminal: {
     header: {
-      eyebrow: "Terminal connection",
-      title: "Terminal integration",
-      closeLabel: "Close terminal integration",
+      eyebrow: "Terminal management",
     },
-    tabs: {
-      label: "Client type",
-      pendingTitle: "{name} · Changes not applied",
-      connectedTitle: "{name} · Connected",
-      disconnectedTitle: "{name} · Not connected",
+    modeTabs: {
+      label: "Terminal access mode",
+      proxy: "Proxy",
+      direct: "Direct",
+      pendingBadge: "Not applied",
     },
     status: {
+      proxy: "Current: proxy",
+      direct: "Current: direct",
       loading: "Loading",
       connected: "Connected",
       disconnected: "Not connected",
@@ -23,8 +23,31 @@ const terminal: DeepString<typeof zh> = {
     loadError: {
       message: "Failed to load configuration: ",
     },
-    client: {
-      minVersionTitle: "Minimum version for native custom model lists",
+    proxy: {
+      title: "Model configuration",
+      subtitle: "Choose models for {client} through the local proxy",
+      previewHint: "Select models to generate a config preview",
+    },
+    direct: {
+      title: "Upstream connection",
+      subtitle: "Choose a Provider and model source",
+      provider: "Direct Provider",
+      chooseProvider: "Choose a Provider with a matching native protocol",
+      noProvider: "No enabled Provider with a matching native protocol",
+      modelSource: "Model source",
+      nativeModels: "Use the terminal native models",
+      nativeModelsHelp: "Keep the terminal's model list and default selection.",
+      providerModels: "Use Provider models",
+      providerModelsHelp: "Sync all upstream models maintained by the Provider.",
+      syncAllTitle: "Sync all upstream models",
+      defaultModelNote: "Default startup model: {model}",
+      selectProviderHint: "Choose an enabled Provider with a matching native protocol.",
+      nativeSummary: "Model selection is managed by the terminal",
+      providerSummary: "{count} models · default {model}",
+      applying: "Applying direct config",
+      apply: "Apply direct config",
+      applied: "{name} direct configuration updated · restart the terminal",
+      previewHint: "Terminal config generated from your selection",
     },
     models: {
       heading: "Model group",

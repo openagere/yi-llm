@@ -41,6 +41,8 @@ pub fn run() {
             commands::terminal::get_terminal_profiles,
             commands::terminal::preview_terminal_config,
             commands::terminal::apply_terminal_config,
+            commands::terminal::preview_terminal_direct_config,
+            commands::terminal::apply_terminal_direct_config,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

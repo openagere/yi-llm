@@ -1,6 +1,6 @@
 import { useNavigationStore } from "./store";
 
-export { useNavigationStore, type EditorPage, type MainPage, type Page } from "./store";
+export { TERMINAL_PAGE_CLIENTS, useNavigationStore, type EditorPage, type MainPage, type Page, type TerminalPageId } from "./store";
 export { useEditorGuard } from "./useEditorGuard";
 
 /** 页面组件常用的导航动作与当前页（不含离散状态，避免无谓重渲染）。 */

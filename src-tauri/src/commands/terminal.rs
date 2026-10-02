@@ -1,6 +1,6 @@
 use crate::{
     app::AppState,
-    domain::terminal::Profile,
+    domain::terminal::{DirectProfile, Profile},
     error::Result,
     service::terminal,
     terminal::{ApplyResult, Preview, Status},
@@ -26,4 +26,20 @@ pub async fn apply_terminal_config(
     profile: Profile,
 ) -> Result<ApplyResult> {
     terminal::apply(&state, profile).await
+}
+
+#[tauri::command]
+pub async fn preview_terminal_direct_config(
+    state: State<'_, AppState>,
+    profile: DirectProfile,
+) -> Result<Preview> {
+    terminal::preview_direct(&state, profile).await
+}
+
+#[tauri::command]
+pub async fn apply_terminal_direct_config(
+    state: State<'_, AppState>,
+    profile: DirectProfile,
+) -> Result<ApplyResult> {
+    terminal::apply_direct(&state, profile).await
 }

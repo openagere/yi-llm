@@ -2,7 +2,15 @@ import { create } from "zustand";
 import { dismissNotification } from "../notify";
 
 /** 应用页面标识与导航类型定义。 */
-export type Page = "provider-list" | "provider-editor" | "model-list" | "model-editor" | "proxy" | "usage" | "terminal" | "settings";
+export type Page = "provider-list" | "provider-editor" | "model-list" | "model-editor" | "proxy" | "usage" | "terminal-codex" | "terminal-claude-code" | "terminal-opencode" | "settings";
+
+/** 终端子页面与客户端的对应关系；侧边栏终端分组按此展开。 */
+export const TERMINAL_PAGE_CLIENTS = {
+  "terminal-codex": "codex",
+  "terminal-claude-code": "claude-code",
+  "terminal-opencode": "opencode",
+} as const;
+export type TerminalPageId = keyof typeof TERMINAL_PAGE_CLIENTS;
 export type MainPage = Exclude<Page, "provider-editor" | "model-editor">;
 export type EditorPage = Extract<Page, "provider-editor" | "model-editor">;
 
@@ -53,17 +61,22 @@ export const useNavigationStore = create<NavigationState>((set, get) => ({
   },
 
   navigate: (next) => {
-    if (next === get().page) return;
-    get().guarded(() => {
+    const current = get().page;
+    if (next === current || get().busy) return;
+    const switchTerminal = current in TERMINAL_PAGE_CLIENTS && next in TERMINAL_PAGE_CLIENTS;
+    const move = () => {
       const { page, history } = get();
       set({
-        dirty: false,
+        dirty: switchTerminal ? get().dirty : false,
         history: page === "provider-editor" || page === "model-editor" ? history : [...history, page],
         proxyVisited: get().proxyVisited || next === "proxy",
         page: next,
         sidebarCollapsed: isCompact() ? true : get().sidebarCollapsed,
       });
-    });
+    };
+    // Terminal drafts are shared across child pages, so switching clients loses no edits.
+    if (switchTerminal) move();
+    else get().guarded(move);
   },
 
   back: () => {

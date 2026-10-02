@@ -2,11 +2,12 @@ import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { describeError } from "@/shared/api";
 import { terminalApi } from "./api";
-import type { TerminalProfile, TerminalStatus } from "./types";
+import type { TerminalDirectProfile, TerminalProfile, TerminalStatus } from "./types";
 
 export const terminalKeys = {
   profiles: ["terminal", "profiles"] as const,
   preview: (profileKey: string) => ["terminal", "preview", profileKey] as const,
+  previewDirect: (profileKey: string) => ["terminal", "preview-direct", profileKey] as const,
 };
 
 const PREVIEW_DEBOUNCE_MS = 250;
@@ -47,6 +48,32 @@ export function useTerminalPreview(profile: TerminalProfile, enabled: boolean) {
     error: active && query.error ? describeError(query.error) : "",
     pending: enabled && (!settled || query.isFetching),
   };
+}
+
+export function useTerminalDirectPreview(profile: TerminalDirectProfile, enabled: boolean) {
+  const profileKey = JSON.stringify(profile);
+  const settledKey = useDebouncedValue(profileKey, PREVIEW_DEBOUNCE_MS);
+  const settled = settledKey === profileKey;
+  const active = enabled && settled;
+  const query = useQuery({
+    queryKey: terminalKeys.previewDirect(settledKey),
+    queryFn: () => terminalApi.previewDirect(JSON.parse(settledKey) as TerminalDirectProfile),
+    enabled: active, staleTime: 0, gcTime: 0, refetchOnWindowFocus: false,
+  });
+  return { preview: active ? query.data : undefined, error: active && query.error ? describeError(query.error) : "", pending: enabled && (!settled || query.isFetching) };
+}
+
+export function useApplyTerminalDirectConfig() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (profile: TerminalDirectProfile) => terminalApi.applyDirect(profile),
+    onSuccess: (_result, profile) => {
+      queryClient.setQueryData<TerminalStatus[]>(terminalKeys.profiles, (items) => items?.map((item) => item.client === profile.client
+        ? { ...item, active: true, active_mode: "direct", exists: true, config_error: null, direct_profile: structuredClone(profile) }
+        : item));
+      void queryClient.invalidateQueries({ queryKey: terminalKeys.profiles });
+    },
+  });
 }
 
 /** 写入终端配置；成功后先本地更新该客户端状态，再重新读取以对齐磁盘内容。 */

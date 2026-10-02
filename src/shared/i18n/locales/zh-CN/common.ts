@@ -22,7 +22,8 @@ const common = {
     models: "模型管理",
     proxy: "代理运行",
     usage: "模型用量",
-    terminal: "终端接入",
+    terminal: "终端管理",
+    terminalExpand: "展开或收起终端管理",
     settings: "设置",
     phase: {
       starting: "启动中",
@@ -43,7 +44,7 @@ const common = {
     models: "维护标准模型及其上下文、模态和推理能力。",
     proxy: "管理本地代理服务，查看连接、请求和运行日志。",
     usage: "查看模型调用、Token 用量和请求记录。",
-    terminal: "将命令行客户端连接到本地模型服务。",
+    terminal: "管理命令行客户端的代理与 Provider 直连配置。",
     settings: "管理外观、字体和界面语言。",
   },
   common: {

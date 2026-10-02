@@ -24,7 +24,8 @@ const common: DeepString<typeof zh> = {
     models: "Models",
     proxy: "Proxy",
     usage: "Usage",
-    terminal: "Terminal",
+    terminal: "Terminal management",
+    terminalExpand: "Expand or collapse terminal management",
     settings: "Settings",
     phase: {
       starting: "Starting",
@@ -45,7 +46,7 @@ const common: DeepString<typeof zh> = {
     models: "Manage standard models, context limits, modalities, and reasoning.",
     proxy: "Manage the local proxy, connections, requests, and logs.",
     usage: "Review model calls, token usage, and request records.",
-    terminal: "Connect command-line clients to your local model gateway.",
+    terminal: "Manage proxy and direct Provider access for command-line clients.",
     settings: "Customize appearance, fonts, and interface language.",
   },
   common: {

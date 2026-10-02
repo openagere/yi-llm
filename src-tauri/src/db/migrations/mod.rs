@@ -2,6 +2,7 @@ mod baseline;
 mod legacy_catalog;
 mod legacy_provider_codes;
 mod non_standard_models;
+mod terminal_direct_profiles;
 #[cfg(test)]
 mod tests;
 
@@ -25,6 +26,11 @@ const MIGRATIONS: &[Migration] = &[
         version: 2,
         name: "non_standard_models",
         apply: non_standard_models::apply,
+    },
+    Migration {
+        version: 3,
+        name: "terminal_direct_profiles",
+        apply: terminal_direct_profiles::apply,
     },
 ];
 

@@ -1,5 +1,5 @@
 use crate::{
-    db::repo::settings,
+    db::repo::{settings, terminal_direct_profiles},
     domain::terminal::{protocol, Profile},
     error::{AppError, Result},
     proxy::routing::RouteTable,
@@ -23,8 +23,10 @@ pub struct Status {
     pub config_path: String,
     pub exists: bool,
     pub active: bool,
+    pub active_mode: String,
     pub config_error: Option<String>,
     pub profile: Option<Profile>,
+    pub direct_profile: Option<crate::domain::terminal::DirectProfile>,
 }
 
 pub fn config_path(client: &str) -> Result<PathBuf> {
@@ -73,17 +75,31 @@ pub fn status(conn: &Connection, client: &str) -> Result<Status> {
         let source = fs::read_to_string(&path)?;
         configurator.is_active(&path, &source, &expected_endpoint)
     };
-    let (active, config_error) = match read_active() {
+    let (proxy_active, config_error) = match read_active() {
         Ok(active) => (active, None),
         Err(error) => (false, Some(error.to_string())),
+    };
+    let direct_profile = terminal_direct_profiles::get(conn, client)?;
+    let direct_active = direct_profile.as_ref().is_some_and(|profile| {
+        crate::terminal::direct_active(conn, profile, &path).unwrap_or(false)
+    });
+    let active = proxy_active || direct_active;
+    let active_mode = if direct_active {
+        "direct"
+    } else if proxy_active {
+        "proxy"
+    } else {
+        "none"
     };
     Ok(Status {
         client: client.into(),
         config_path: path.display().to_string(),
         exists,
         active,
+        active_mode: active_mode.into(),
         config_error,
         profile: profile::load(conn, client)?,
+        direct_profile,
     })
 }
 
