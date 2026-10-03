@@ -7,7 +7,7 @@ use crate::{
     },
     error::{AppError, Result},
 };
-use rusqlite::{params, Connection, OptionalExtension};
+use rusqlite::{params, Connection, OptionalExtension, Transaction};
 use std::collections::HashMap;
 
 pub const COLUMNS: &str = "id, type, name, short_code, base_url, api_key, enabled, thinking, extra, is_default, protocol_support";
@@ -77,8 +77,29 @@ pub fn delete(conn: &Connection, id: &str) -> Result<()> {
 
 /// Insert or replace a provider and its model mappings (mappings are replaced wholesale).
 pub fn save(conn: &mut Connection, view: &ProviderView) -> Result<()> {
+    save_many(conn, std::slice::from_ref(view))
+}
+
+/// Insert or replace several providers atomically; used by encrypted configuration import.
+pub fn save_many(conn: &mut Connection, views: &[ProviderView]) -> Result<()> {
+    let tx = conn.transaction()?;
+    save_many_in_tx(&tx, views)?;
+    tx.commit()?;
+    Ok(())
+}
+
+/// Writes imported providers inside the catalog transaction when new standard models are added.
+pub fn save_many_in_tx(tx: &Transaction<'_>, views: &[ProviderView]) -> Result<()> {
+    for view in views {
+        save_in_tx(tx, view)?;
+    }
+    Ok(())
+}
+
+/// Validation and writes for a single provider, shared by the public save functions.
+fn save_in_tx(tx: &Transaction<'_>, view: &ProviderView) -> Result<()> {
     validate_short_code(&view.provider.short_code)?;
-    let duplicate: bool = conn.query_row(
+    let duplicate: bool = tx.query_row(
         "SELECT EXISTS(SELECT 1 FROM providers WHERE short_code=?1 COLLATE NOCASE AND id!=?2)",
         params![view.provider.short_code, view.provider.id],
         |row| row.get(0),
@@ -86,7 +107,7 @@ pub fn save(conn: &mut Connection, view: &ProviderView) -> Result<()> {
     if duplicate {
         return Err(AppError::conflict("Provider 简写已被其他连接使用"));
     }
-    let renames: Vec<_> = models::list_for_provider(conn, &view.provider.id)?
+    let renames: Vec<_> = models::list_for_provider(tx, &view.provider.id)?
         .into_iter()
         .filter_map(|old| {
             view.models
@@ -106,7 +127,7 @@ pub fn save(conn: &mut Connection, view: &ProviderView) -> Result<()> {
             return Err(AppError::validation("模型名称不能为空"));
         }
         if let Some(id) = &model.standard_model_id {
-            let standard = catalog::get(conn, id)?
+            let standard = catalog::get(tx, id)?
                 .ok_or_else(|| AppError::validation("关联的标准模型不存在"))?;
             if standard.protocol != view.provider.provider_type {
                 return Err(AppError::validation("标准模型与 Provider 上游协议不匹配"));
@@ -120,7 +141,6 @@ pub fn save(conn: &mut Connection, view: &ProviderView) -> Result<()> {
                 })?;
         }
     }
-    let tx = conn.transaction()?;
     let protocol_support = view
         .provider
         .protocol_support
@@ -172,8 +192,7 @@ pub fn save(conn: &mut Connection, view: &ProviderView) -> Result<()> {
             params![view.provider.id],
         )?;
     }
-    rename_references(&tx, &renames)?;
-    tx.commit()?;
+    rename_references(tx, &renames)?;
     Ok(())
 }
 

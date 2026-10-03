@@ -31,3 +31,12 @@ export interface ModelMapping {
 
 export interface ProviderView extends Provider { models: ModelMapping[] }
 export interface ProviderSaveResult { terminal_config_warnings: string[] }
+/** 加密配置导入或导出的结果。 */
+export interface ProviderConfigTransferResult {
+  path: string;
+  providers: number;
+  models: number;
+  /** 导出：写入文件的标准模型数；导入：合并进本地模型目录的标准模型数。 */
+  standard_models: number;
+  terminal_config_warnings: string[];
+}

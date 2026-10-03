@@ -18,7 +18,7 @@
 .standard-model-refs { color: var(--text-muted); font-size: 12px; font-variant-numeric: tabular-nums; }
 .standard-model-actions { display: flex; gap: 4px; }
 .standard-model-actions .icon-button { width: 34px; height: 34px; border-color: transparent; background: transparent; }
-.standard-model-actions .icon-button:not(.action-danger):hover:not(:disabled) { border-color: var(--danger-border); background: var(--danger-soft); }
+.standard-model-actions .icon-button:not(.action-danger):hover:not(:disabled) { color: var(--text-primary); background: var(--btn-ghost-hover); }
 .standard-model-info-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
 .standard-model-identity-grid { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); gap: 20px; }
 .standard-model-protocol-field { grid-column: 1 / -1; max-width: 510px; }

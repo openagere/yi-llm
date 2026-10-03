@@ -42,6 +42,13 @@ tempfile = "3"
 r2d2 = "0.8.10"
 arc-swap = "1.9.2"
 r2d2_sqlite = "0.31"
+aes-gcm = "0.10"
+pbkdf2 = "0.12"
+sha2 = "0.10"
+base64 = "0.22"
+rand = "0.8"
+zeroize = "1"
+rfd = { version = "0.16", default-features = false, features = ["xdg-portal", "wayland", "tokio"] }
 
 [lints.rust]
 unsafe_code = "forbid"

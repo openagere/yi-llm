@@ -102,7 +102,8 @@
 .analytics-table .analytics-row-action { width: 26px; height: 28px; min-height: 28px; border-color: transparent; color: var(--text-muted); background: transparent; }
 .analytics-pagination { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px 16px; min-height: 64px; padding: 14px 0; color: var(--text-muted); font-size: 12px; }
 .analytics-pagination > div { display: flex; align-items: center; gap: 8px; margin-left: auto; }
-.analytics-pagination .icon-button { width: var(--control-height); height: var(--control-height); border-color: var(--border); color: var(--text-secondary); }
+.analytics-pagination .icon-button { width: var(--control-height); height: var(--control-height); border: 0; border-radius: 9px; color: var(--btn-secondary-text); background: var(--btn-secondary-bg); }
+.analytics-pagination .icon-button:hover:not(:disabled) { color: var(--text-primary); background: var(--btn-secondary-hover); }
 .analytics-page-size { width: 112px; margin-right: 4px; }
 .analytics-page-index { min-width: 48px; text-align: center; font-variant-numeric: tabular-nums; }
 .analytics-record-filters { display: flex; align-items: center; flex-wrap: wrap; gap: 9px; margin: 0 0 17px; }
@@ -138,12 +139,8 @@
 .analytics-page-footer > span:last-child { text-align: right; }
 .analytics-updated-dot { flex: none; width: 5px; height: 5px; border-radius: 50%; background: var(--surface-subtle); }
 .analytics-page-footer .analytics-stale { color: var(--warning); }
-.analytics-record-dialog { position: fixed; inset: 0; width: min(490px, calc(100vw - 32px)); max-height: calc(100dvh - 48px); margin: auto; padding: 0; overflow: auto; border: 1px solid var(--border); border-radius: 8px; color: var(--text-secondary); background: var(--surface); box-shadow: var(--shadow-lg); }
-.analytics-record-dialog::backdrop { background: var(--backdrop); }
-.analytics-record-dialog-content { padding: 26px; }
-.analytics-record-dialog header, .analytics-record-dialog header > span { display: flex; align-items: center; justify-content: space-between; gap: 9px; }
-.analytics-record-dialog header h2 { margin: 0; color: var(--text-secondary); font-size: 15px; font-weight: 650; }
-.analytics-record-dialog header > span > svg { color: var(--text-muted); }
+.analytics-record-dialog { width: min(520px, calc(100vw - 32px)); }
+.analytics-record-dialog-content { padding: 24px; }
 .analytics-record-metadata { display: grid; gap: 15px; margin: 25px 0; }
 .analytics-record-metadata > div { display: grid; grid-template-columns: 74px minmax(0, 1fr); gap: 12px; }
 .analytics-record-metadata dt { color: var(--text-muted); font-size: 12px; }

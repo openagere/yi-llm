@@ -9,6 +9,7 @@ import { ConfirmDialog, LIST_PAGE_SIZE, ListPagination, PageHeader, ProviderIcon
 import { useDeleteProvider, useProviders, useSaveProvider } from "../hooks";
 import { useProviderSelection } from "../selection";
 import type { ProviderView } from "../types";
+import { ProviderConfigTransfer } from "./ProviderConfigTransfer";
 
 const EMPTY_PROVIDERS: ProviderView[] = [];
 
@@ -73,7 +74,7 @@ export function ProviderListPage() {
   return (
     <section className="provider-list-page">
       <PageHeader eyebrow={t("provider.list.eyebrow")} title="Providers" subtitle={t("pageDescriptions.providers")} actions={
-        <button type="button" className="icon-button refresh-providers" title={t("provider.list.refresh")} aria-label={t("provider.list.refresh")} disabled={loading || pending} onClick={() => void providersQuery.refetch()}><RefreshCw size={17} className={loading ? "spinning" : ""} /></button>
+        <ProviderConfigTransfer disabled={loading || pending} />
       } primaryAction={<button type="button" className="outline-action-button add-provider-button" disabled={loading || loadFailed || pending} onClick={() => edit(null)}><Plus size={17} />{t("provider.list.add")}</button>} />
       <div className="connection-toolbar">
         <div className="connection-filters" role="group" aria-label={t("provider.list.filterLabel")}>

@@ -52,6 +52,23 @@ impl CatalogService {
         self.file()?.save(conn, model)
     }
 
+    /// Adds or replaces several models at once; see the file catalog's save_many.
+    pub fn save_many(&self, conn: &mut Connection, models: &[StandardModel]) -> Result<()> {
+        self.file()?.save_many(conn, models)
+    }
+
+    pub fn save_many_with<F>(
+        &self,
+        conn: &mut Connection,
+        models: &[StandardModel],
+        write: F,
+    ) -> Result<()>
+    where
+        F: FnOnce(&rusqlite::Transaction<'_>) -> Result<()>,
+    {
+        self.file()?.save_many_with(conn, models, write)
+    }
+
     pub fn delete(&self, conn: &mut Connection, id: &str) -> Result<()> {
         self.file()?.delete(conn, id)
     }

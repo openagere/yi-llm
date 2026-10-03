@@ -21,8 +21,7 @@
 .workspace-header .icon-button { width: 34px; height: 34px; min-height: 34px; border: 0; border-radius: 8px; background: transparent; }
 .workspace-header .icon-button:hover:not(:disabled) { color: var(--text-primary); background: var(--surface-hover); }
 .workspace-header .workspace-header-back { margin-top: 1px; margin-left: -6px; }
-.workspace-header .workspace-header-primary .primary-button { width: auto; min-width: 0; min-height: 32px; padding: 0 14px; border-radius: 9px; background: var(--surface-inverse); font-size: 12px; box-shadow: none; }
-.workspace-header .workspace-header-primary .primary-button:hover:not(:disabled) { opacity: .88; }
+.workspace-header .workspace-header-primary :is(.primary-button, .outline-action-button) { width: auto; min-width: 0; min-height: 36px; padding: 0 16px; }
 
 @media (max-width: 680px) {
   .workspace-header { flex-wrap: wrap; gap: 16px; min-height: 0; margin-bottom: 25px; }
@@ -31,3 +30,8 @@
   .workspace-header-copy > p { font-size: 12px; }
   .workspace-header-actions { margin-left: auto; gap: 6px; }
 }
+
+/* Transfer is a file operation, distinct from navigation and dismiss controls. */
+.workspace-header .transfer-action { border: 1px solid var(--btn-secondary-border); color: var(--btn-secondary-text); background: var(--btn-secondary-bg); }
+.workspace-header .transfer-action:hover:not(:disabled) { border-color: var(--btn-secondary-border-hover); background: var(--btn-secondary-hover); }
+.workspace-header .transfer-action:active:not(:disabled) { background: var(--btn-secondary-active); }

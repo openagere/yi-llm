@@ -86,7 +86,7 @@ export function ProxyPage({ active }: { active: boolean }) {
     <div id="proxy-logs-panel" role="tabpanel" aria-labelledby="proxy-logs-tab" hidden={view !== "logs"}>
       <Suspense fallback={<div className="proxy-loading">{t("proxy.logs.loading")}</div>}><ProxyLogs visible={active && view === "logs"} /></Suspense>
     </div>
-    <dialog className="proxy-listen-dialog" id="proxy-listen-options" aria-label={t("proxy.listen.heading")}>
+    <dialog className="app-dialog proxy-listen-dialog" id="proxy-listen-options" aria-label={t("proxy.listen.heading")}>
       <button type="button" className="icon-button proxy-listen-close" title={t("proxy.closeSettings")} aria-label={t("proxy.closeSettings")} onClick={() => (document.getElementById("proxy-listen-options") as HTMLDialogElement | null)?.close()}><X size={16} /></button>
       <ProxyListenSettings />
     </dialog>

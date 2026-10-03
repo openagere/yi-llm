@@ -541,3 +541,75 @@ test("direct Provider shows every upstream model without clipping the action", a
   expect((await apply.boundingBox())!.y).toBe(initialY);
   await page.screenshot({ path: testInfo.outputPath("direct-all-models.png") });
 });
+
+type TransferCall = { command: string; args: { passphrase?: string; title?: string; contents?: string; filename?: string } };
+
+async function transferCalls(page: Page): Promise<TransferCall[]> {
+  return page.evaluate(() => (window as unknown as { __transferCalls: TransferCall[] }).__transferCalls);
+}
+
+test("provider configuration is exported and imported with a passphrase-protected file", async ({ page }) => {
+  await installBackend(page, "light");
+  await page.goto("/");
+  await expect(page.locator(".connection-row")).toHaveCount(4);
+
+  // 导出：两次输入的加密字符串必须一致。
+  await page.getByRole("button", { name: "导出配置", exact: true }).click();
+  const exportDialog = page.getByRole("dialog");
+  await expect(exportDialog).toBeVisible();
+  await exportDialog.getByLabel("加密字符串", { exact: true }).fill("correct horse");
+  await exportDialog.getByLabel("确认加密字符串", { exact: true }).fill("wrong horse");
+  await exportDialog.getByRole("button", { name: "导出", exact: true }).click();
+  await expect(exportDialog.getByRole("alert")).toHaveText("两次输入的加密字符串不一致");
+  expect(await transferCalls(page)).toEqual([]);
+
+  await exportDialog.getByLabel("确认加密字符串", { exact: true }).fill("correct horse");
+  await exportDialog.getByRole("button", { name: "导出", exact: true }).click();
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await expect(page.locator(".app-toast")).toContainText("已导出 4 个 Provider、4 个模型映射");
+  expect(await transferCalls(page)).toEqual([{ command: "export_provider_config", args: { passphrase: "correct horse", title: "导出 Provider 配置" } }]);
+
+  // 导入：同一个加密字符串与文件缺一不可。
+  await page.getByRole("button", { name: "导入配置", exact: true }).click();
+  const importDialog = page.getByRole("dialog");
+  await expect(importDialog).toBeVisible();
+  await importDialog.getByLabel("加密字符串", { exact: true }).fill("short");
+  await importDialog.getByRole("button", { name: "导入", exact: true }).click();
+  await expect(importDialog.getByRole("alert")).toHaveText("加密字符串至少需要 8 位");
+  expect(await transferCalls(page)).toHaveLength(1);
+
+  await importDialog.getByLabel("加密字符串", { exact: true }).fill("correct horse");
+  await importDialog.getByRole("button", { name: "导入", exact: true }).click();
+  await expect(importDialog.getByRole("alert")).toHaveText("请先选择要导入的配置文件");
+  expect(await transferCalls(page)).toHaveLength(1);
+
+  await importDialog.locator("input[type=file]").setInputFiles({
+    name: "providers.yillm",
+    mimeType: "application/json",
+    buffer: Buffer.from("ciphertext"),
+  });
+  await expect(importDialog.getByText("providers.yillm", { exact: true })).toBeVisible();
+  await importDialog.getByRole("button", { name: "导入", exact: true }).click();
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await expect(page.locator(".app-toast")).toContainText("已导入 2 个 Provider、3 个模型映射（新增 1 个标准模型）");
+  expect((await transferCalls(page))[1]).toEqual({
+    command: "import_provider_config",
+    args: { passphrase: "correct horse", contents: "ciphertext", filename: "providers.yillm" },
+  });
+});
+
+
+test("import reports terminal configuration warnings instead of silently hiding them", async ({ page }) => {
+  await installBackend(page, "light");
+  await page.goto("/");
+  await page.getByRole("button", { name: "导入配置", exact: true }).click();
+  const dialog = page.getByRole("dialog");
+  await dialog.getByLabel("加密字符串", { exact: true }).fill("correct horse");
+  await dialog.locator("input[type=file]").setInputFiles({
+    name: "warnings.yillm",
+    mimeType: "application/json",
+    buffer: Buffer.from("ciphertext"),
+  });
+  await dialog.getByRole("button", { name: "导入", exact: true }).click();
+  await expect(page.locator(".app-toast")).toContainText("codex 配置未更新");
+});

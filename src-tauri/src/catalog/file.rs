@@ -238,18 +238,48 @@ impl FileCatalog {
     }
 
     pub fn save(&mut self, conn: &mut Connection, model: &StandardModel) -> Result<()> {
+        self.save_many(conn, std::slice::from_ref(model))
+    }
+
+    /// Adds or replaces several models with a single catalog write, so importing a
+    /// configuration rewrites the shared catalog file only once.
+    pub fn save_many(&mut self, conn: &mut Connection, models: &[StandardModel]) -> Result<()> {
+        if models.is_empty() {
+            return Ok(());
+        }
         self.sync(conn)?;
         let mut document = self.loaded_document()?;
-        if let Some(existing) = document
-            .models
-            .iter_mut()
-            .find(|entry| entry.id == model.id)
-        {
-            *existing = CatalogEntry::from(model);
-        } else {
-            document.models.push(CatalogEntry::from(model));
+        for model in models {
+            if let Some(existing) = document
+                .models
+                .iter_mut()
+                .find(|entry| entry.id == model.id)
+            {
+                *existing = CatalogEntry::from(model);
+            } else {
+                document.models.push(CatalogEntry::from(model));
+            }
         }
         self.persist(conn, document)
+    }
+
+    /// Applies catalog additions and dependent database writes in one transaction.
+    /// The file is replaced only after every database operation has succeeded.
+    pub fn save_many_with<F>(
+        &mut self,
+        conn: &mut Connection,
+        models: &[StandardModel],
+        write: F,
+    ) -> Result<()>
+    where
+        F: FnOnce(&rusqlite::Transaction<'_>) -> Result<()>,
+    {
+        self.sync(conn)?;
+        let mut document = self.loaded_document()?;
+        for model in models {
+            document.models.push(CatalogEntry::from(model));
+        }
+        self.persist_with(conn, document, write)
     }
 
     pub fn delete(&mut self, conn: &mut Connection, id: &str) -> Result<()> {
@@ -267,7 +297,19 @@ impl FileCatalog {
         CatalogDocument::parse(bytes)
     }
 
-    fn persist(&mut self, conn: &mut Connection, mut document: CatalogDocument) -> Result<()> {
+    fn persist(&mut self, conn: &mut Connection, document: CatalogDocument) -> Result<()> {
+        self.persist_with(conn, document, |_| Ok(()))
+    }
+
+    fn persist_with<F>(
+        &mut self,
+        conn: &mut Connection,
+        mut document: CatalogDocument,
+        write: F,
+    ) -> Result<()>
+    where
+        F: FnOnce(&rusqlite::Transaction<'_>) -> Result<()>,
+    {
         document.normalize()?;
         let old = self
             .loaded
@@ -276,6 +318,7 @@ impl FileCatalog {
         let bytes = document.bytes()?;
         let tx = conn.transaction()?;
         apply_document(&tx, &document)?;
+        write(&tx)?;
         // Detect external edits before replacing the shared source file.
         if std::fs::read(&self.path)? != *old {
             return Err(AppError::conflict(

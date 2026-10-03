@@ -1,4 +1,5 @@
 pub mod app;
+pub mod backup;
 pub mod catalog;
 mod commands;
 pub mod db;
@@ -26,6 +27,8 @@ pub fn run() {
             commands::providers::save_provider,
             commands::providers::delete_provider,
             commands::providers::test_provider,
+            commands::providers::export_provider_config,
+            commands::providers::import_provider_config,
             commands::models::list_standard_models,
             commands::models::get_model_catalog_info,
             commands::models::save_standard_model,

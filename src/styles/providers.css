@@ -3,8 +3,6 @@
   padding-bottom: 80px;
 }
 
-.provider-list-page .primary-button, .connection-editor-page .primary-button { background: var(--surface-inverse); }
-.provider-list-page .primary-button:hover:not(:disabled), .connection-editor-page .primary-button:hover:not(:disabled) { background: var(--surface-inverse); }
 .spinning { animation: spin 1s linear infinite; }
 
 /* Flat connection directory, with protocol controls secondary to identity. */
@@ -68,7 +66,8 @@ button.connection-protocol:hover:not(:disabled) { border-color: var(--border-str
 .connection-summary-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 12px 18px; margin-left: auto; }
 .list-pagination { display: flex; align-items: center; gap: 8px; }
 .list-pagination > span { min-width: 48px; color: var(--text-secondary); text-align: center; white-space: nowrap; font-variant-numeric: tabular-nums; }
-.list-pagination .icon-button { width: 32px; height: 32px; min-height: 32px; border-color: var(--border); color: var(--text-secondary); background: var(--surface); }
+.list-pagination .icon-button { width: 32px; height: 32px; min-height: 32px; border: 0; border-radius: 9px; color: var(--btn-secondary-text); background: var(--btn-secondary-bg); }
+.list-pagination .icon-button:hover:not(:disabled) { color: var(--text-primary); background: var(--btn-secondary-hover); }
 .connection-empty, .connection-no-results { display: grid; justify-items: center; align-content: center; gap: 19px; min-height: 310px; padding: 36px 20px; color: var(--text-muted); text-align: center; }
 .connection-empty h2, .connection-no-results h2 { margin: 0; color: var(--text-secondary); font-size: 14px; font-weight: 550; }
 .connection-no-results { min-height: 240px; }
@@ -157,17 +156,14 @@ button.connection-protocol:hover:not(:disabled) { border-color: var(--border-str
 .app-toast > button:hover { color: var(--text-secondary); background: var(--surface-subtle); }
 @keyframes notification-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 
-.confirm-dialog { position: fixed; inset: 0; width: min(420px, calc(100vw - 32px)); max-height: calc(100dvh - 48px); margin: auto; padding: 0; overflow: auto; border: 1px solid var(--border); border-radius: 8px; color: var(--text-primary); background: var(--surface); box-shadow: var(--shadow-lg); }
-.confirm-dialog::backdrop { background: var(--backdrop); }
-.confirm-dialog-content { padding: 27px; }
-.confirm-dialog-icon { display: grid; place-items: center; width: 42px; height: 42px; margin-bottom: 19px; border-radius: 8px; color: var(--warning); background: var(--icon-bg-warning); }
-.confirm-dialog-icon.destructive { color: var(--danger); background: var(--icon-bg-danger); }
-.confirm-dialog h2 { margin: 0 0 12px; color: var(--text-primary); font-size: 16px; font-weight: 650; overflow-wrap: anywhere; }
-.confirm-dialog p { margin: 0; color: var(--text-secondary); font-size: 12px; line-height: 1.8; overflow-wrap: anywhere; }
-.confirm-dialog p.confirm-dialog-error { margin-top: 14px; color: var(--danger); font-size: 12px; }
-.confirm-dialog-actions { display: flex; justify-content: flex-end; gap: 9px; margin-top: 26px; }
-.danger-button.solid { border-color: var(--danger); color: var(--surface); background: var(--danger); }
-.danger-button.solid:hover:not(:disabled) { background: var(--danger-soft); }
+.transfer-dialog .field { margin-top: 16px; color: var(--text-secondary); font-size: 12px; font-weight: 500; }
+.transfer-dialog .field + .field { margin-top: 12px; }
+.transfer-dialog .field-hint { font-weight: 450; }
+.transfer-file { position: relative; display: flex; align-items: center; gap: 8px; min-height: 36px; padding: 3px 3px 3px 12px; border: 1px solid var(--btn-secondary-border); border-radius: 8px; background: var(--surface); }
+.transfer-file-name { flex: 1; min-width: 0; overflow: hidden; color: var(--text-muted); font-weight: 450; text-overflow: ellipsis; white-space: nowrap; }
+.transfer-file-name.is-selected { color: var(--text-primary); }
+.transfer-file .secondary-button { min-height: 28px; padding: 0 10px; border-radius: 7px; font-size: 12px; font-weight: 500; }
+.transfer-dialog .field .transfer-file-input { position: absolute; width: 1px; height: 1px; margin: 0; padding: 0; overflow: hidden; clip-path: inset(50%); border: 0; white-space: nowrap; }
 
 @container (max-width: 700px) {
   .connection-table-heading { grid-template-columns: minmax(0, 1fr) auto auto; }

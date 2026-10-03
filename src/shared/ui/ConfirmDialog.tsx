@@ -1,5 +1,5 @@
 import { useEffect, useId, useRef } from "react";
-import { LoaderCircle, Trash2, TriangleAlert } from "lucide-react";
+import { LoaderCircle } from "lucide-react";
 import { useI18n } from "@/shared/i18n";
 
 interface Props {
@@ -26,15 +26,14 @@ export function ConfirmDialog({ title, description, confirmLabel, busy = false, 
   }, []);
 
   return (
-    <dialog ref={dialog} className="confirm-dialog" aria-labelledby={titleId} aria-describedby={descriptionId}
+    <dialog ref={dialog} className="app-dialog" aria-labelledby={titleId} aria-describedby={descriptionId}
       onCancel={(event) => { event.preventDefault(); if (!busy) onCancel(); }}
       onClick={(event) => { if (event.target === event.currentTarget && !busy) onCancel(); }}>
-      <div className="confirm-dialog-content">
-        <span className={`confirm-dialog-icon ${destructive ? "destructive" : ""}`}>{destructive ? <Trash2 size={22} /> : <TriangleAlert size={22} />}</span>
+      <div className="app-dialog-body">
         <h2 id={titleId}>{title}</h2>
         <p id={descriptionId}>{description}</p>
-        {error && <p className="confirm-dialog-error" role="alert">{error}</p>}
-        <div className="confirm-dialog-actions">
+        {error && <p className="app-dialog-error" role="alert">{error}</p>}
+        <div className="app-dialog-actions">
           <button type="button" className="secondary-button" autoFocus disabled={busy} onClick={onCancel}>{t("ui.dialog.cancel")}</button>
           <button type="button" className={destructive ? "danger-button solid" : "primary-button"} disabled={busy} onClick={onConfirm}>
             {busy && <LoaderCircle size={15} className="spinning" />}{busy ? t("ui.dialog.deleting") : confirmLabel}

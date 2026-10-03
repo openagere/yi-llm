@@ -215,8 +215,7 @@
 .proxy-monitor-facts dd { line-height: 1.2; }
 .proxy-monitor-chart-toolbar { padding-top: 8px; }
 .proxy-monitor-chart { height: clamp(150px, calc(var(--workspace-height) - 508px), 174px); }
-.proxy-listen-dialog { width: min(620px, calc(100vw - 48px)); max-height: calc(100dvh - 64px); margin: auto; padding: 28px; overflow: auto; border: 1px solid var(--border-strong); border-radius: 12px; color: var(--text-primary); background: var(--surface); box-shadow: var(--shadow-lg); }
-.proxy-listen-dialog::backdrop { background: var(--backdrop); }
+.proxy-listen-dialog { width: min(620px, calc(100vw - 48px)); max-height: calc(100dvh - 64px); padding: 24px; }
 .proxy-listen-close { position: absolute; top: 10px; right: 10px; }
 .proxy-listen-dialog .editor-section { padding: 8px 0 0; border: 0; }
 .proxy-listen-dialog .section-heading { padding-right: 18px; }

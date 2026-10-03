@@ -23,26 +23,30 @@ html, body, #root { width: 100%; min-width: 0; min-height: 100%; margin: 0; }
 body { min-width: 360px; min-height: 100vh; font-size: 14px; background: var(--canvas); }
 button, input, select, textarea { font: inherit; }
 button { color: inherit; cursor: pointer; }
-button:disabled { cursor: not-allowed; opacity: .54; }
+button:disabled { cursor: not-allowed; opacity: .48; }
 button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible { outline: 3px solid var(--focus-ring); outline-offset: 2px; }
 code, pre { font-family: var(--font-mono); }
 .provider-brand-icon { display: inline-flex; flex: none; align-items: center; justify-content: center; color: var(--text-secondary); }
 .provider-brand-icon img { display: block; width: 100%; height: 100%; object-fit: contain; }
 .global-error { width: min(100% - 96px, 1384px); margin: 12px auto 0; padding: 11px 14px; border: 1px solid var(--danger-border); border-radius: 6px; color: var(--danger); background: var(--danger-soft); font-size: 12px; line-height: 1.5; }
 h1 { margin: 0; color: var(--text-primary); font-size: 26px; line-height: 1.25; font-weight: 660; overflow-wrap: anywhere; }
-.icon-button { display: inline-flex; flex: none; align-items: center; justify-content: center; gap: 7px; min-height: 34px; padding: 0 9px; border: 1px solid transparent; border-radius: 6px; color: var(--text-secondary); background: transparent; font-size: 12px; transition: background .15s, color .15s; }
-.icon-button { width: 35px; height: 35px; padding: 0; border-color: var(--border); color: var(--text-secondary); background: var(--surface); }
-.icon-button:hover { border-color: var(--border); color: var(--accent-hover); background: var(--surface-subtle); }
+.icon-button { display: inline-flex; flex: none; align-items: center; justify-content: center; width: 32px; height: 32px; min-height: 32px; padding: 0; border: 0; border-radius: 8px; color: var(--btn-ghost-text); background: transparent; font-size: 13px; transition: background .16s ease, color .16s ease; }
+.icon-button:hover:not(:disabled) { color: var(--text-primary); background: var(--btn-ghost-hover); }
+.icon-button:active:not(:disabled) { background: var(--btn-ghost-active); }
 
-.primary-button, .secondary-button, .danger-button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 37px; padding: 0 13px; border: 1px solid transparent; border-radius: 6px; white-space: nowrap; font-size: 12px; font-weight: 610; transition: background .15s, border-color .15s, color .15s; }
-.primary-button { color: var(--surface); background: var(--surface-inverse); }
-.primary-button:hover:not(:disabled) { background: var(--surface-inverse); }
-.secondary-button { border-color: var(--border-strong); color: var(--text-primary); background: var(--surface); }
-.secondary-button:hover:not(:disabled) { border-color: var(--border-strong); background: var(--surface); }
-.danger-button { border-color: var(--danger-border); color: var(--danger); background: var(--surface); }
+.primary-button, .secondary-button, .danger-button, .outline-action-button { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 36px; padding: 0 16px; border: 1px solid transparent; border-radius: 9px; white-space: nowrap; font-size: 13px; font-weight: 550; line-height: 1; letter-spacing: 0; box-shadow: none; transition: background .16s ease, border-color .16s ease, color .16s ease, box-shadow .16s ease; }
+.primary-button, .outline-action-button { border-color: var(--btn-primary-border); color: var(--btn-primary-text); background: var(--btn-primary-bg); box-shadow: var(--btn-primary-shadow); }
+.primary-button:hover:not(:disabled), .outline-action-button:hover:not(:disabled) { background: var(--btn-primary-hover); }
+.primary-button:active:not(:disabled), .outline-action-button:active:not(:disabled) { background: var(--btn-primary-active); }
+.secondary-button { border-color: var(--btn-secondary-border); color: var(--btn-secondary-text); background: var(--btn-secondary-bg); }
+.secondary-button:hover:not(:disabled) { border-color: var(--btn-secondary-border-hover); background: var(--btn-secondary-hover); }
+.secondary-button:active:not(:disabled) { background: var(--btn-secondary-active); }
+.danger-button { border-color: var(--danger-border); color: var(--danger); background: transparent; }
 .danger-button:hover:not(:disabled) { background: var(--danger-soft); }
-.text-button { display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-height: 32px; padding: 0 3px; border: 0; color: var(--accent); background: transparent; font-size: 12px; font-weight: 600; }
-.text-button:hover { color: var(--accent-hover); }
+.danger-button:active:not(:disabled) { background: var(--danger-soft); }
+:is(.primary-button, .secondary-button, .danger-button, .outline-action-button):disabled { opacity: 1; color: var(--btn-disabled-text); background: var(--btn-disabled-bg); border-color: var(--btn-disabled-border); box-shadow: none; }
+.text-button { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 32px; padding: 0 8px; border: 0; border-radius: 8px; color: var(--text-secondary); background: transparent; font-size: 13px; font-weight: 500; }
+.text-button:hover { color: var(--text-primary); background: var(--btn-ghost-hover); }
 
 .provider-list-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 14px 2px 8px; color: var(--text-muted); font-size: 12px; }
 .provider-list-toolbar span:first-child { color: var(--text-secondary); font-weight: 620; }
@@ -286,10 +290,6 @@ h1 { margin: 0; color: var(--text-primary); font-size: 26px; line-height: 1.25; 
 body { min-width: 320px; color: var(--text-primary); background: var(--surface); }
 .global-error { width: min(100% - 108px, 1432px); border-radius: 7px; }
 h1 { font-size: 29px; font-weight: 650; }
-.primary-button, .secondary-button, .danger-button { min-height: 39px; border-radius: 6px; font-size: 12px; }
-.primary-button { background: var(--surface-inverse); }
-.secondary-button { border-color: var(--border); }
-.icon-button { width: 37px; height: 37px; border-radius: 7px; }
 
 
 .wizard-steps { gap: 8px; margin-top: 23px; padding-bottom: 14px; }

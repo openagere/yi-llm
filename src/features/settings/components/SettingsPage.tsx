@@ -13,12 +13,13 @@ interface OptionCardProps {
   title: ReactNode;
   description: string;
   preview?: ReactNode;
+  variant?: "light" | "dark" | "system";
 }
 
 /** 设置页通用选项卡片：主题、字体、语言共用同一交互模式。 */
-function OptionCard({ selected, onSelect, title, description, preview }: OptionCardProps) {
+function OptionCard({ selected, onSelect, title, description, preview, variant }: OptionCardProps) {
   return (
-    <button type="button" className={`preference-option ${selected ? "selected" : ""}`} aria-pressed={selected} onClick={onSelect}>
+    <button type="button" className={`preference-option ${variant ? `preference-option-${variant}` : ""} ${selected ? "selected" : ""}`} aria-pressed={selected} onClick={onSelect}>
       <span className="preference-option-head">{title}</span>
       <span className="preference-option-desc">{description}</span>
       {preview && <span className="preference-option-preview">{preview}</span>}
@@ -62,7 +63,7 @@ export function SettingsPage() {
           </div>
           <div className="preference-options" role="group" aria-label={t("settings.theme.heading")}>
             {themeOptions.map(({ id, icon: Icon, label, desc }) => (
-              <OptionCard key={id} selected={settings.theme === id} onSelect={() => update("theme", id)} title={<><Icon size={16} strokeWidth={1.9} />{label}</>} description={desc} />
+              <OptionCard key={id} variant={id} selected={settings.theme === id} onSelect={() => update("theme", id)} title={<><Icon size={16} strokeWidth={1.9} />{label}</>} description={desc} />
             ))}
           </div>
         </section>

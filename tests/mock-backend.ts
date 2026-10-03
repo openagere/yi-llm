@@ -28,11 +28,14 @@ export async function installBackend(page: Page, theme: "light" | "dark", empty 
       models.push({ ...structuredClone(models[0]), id: "extra", name: "Extra Model", provider_count: 0 });
     }
     let maximized = false;
-    type IpcArgs = { action?: string; host?: string; port?: number; logLevel?: string; id?: string; provider?: { id: string }; models?: unknown[]; model?: { id: string }; profile?: { client?: string; models?: unknown[]; provider_id?: string; model_source?: string; model?: string | null } };
+    type IpcArgs = { action?: string; host?: string; port?: number; logLevel?: string; id?: string; passphrase?: string; title?: string; provider?: { id: string }; models?: unknown[]; model?: { id: string }; profile?: { client?: string; models?: unknown[]; provider_id?: string; model_source?: string; model?: string | null } };
     const nativeCommands: { command: string; args: IpcArgs }[] = [];
+    /** 记录加密配置导入 / 导出的 IPC 调用，供 UI 测试断言参数。 */
+    const transferCalls: { command: string; args: IpcArgs }[] = [];
     const ipcError = (code: string, message: string) => ({ code, message });
     Object.defineProperty(window, "isTauri", { value: options.native, configurable: true });
     Object.defineProperty(window, "__nativeCommands", { value: nativeCommands, configurable: true });
+    Object.defineProperty(window, "__transferCalls", { value: transferCalls, configurable: true });
     let phase = "running";
     let settings = { host: "127.0.0.1", port: 11435, log_level: "info" };
     const now = Date.now();
@@ -81,6 +84,8 @@ export async function installBackend(page: Page, theme: "light" | "dark", empty 
           case "save_standard_model": { const model = args.model as (typeof models)[number]; models = [...models.filter(m => m.id !== model.id), model]; } return;
           case "delete_standard_model": models = models.filter(m => m.id !== args.id); return;
           case "test_provider": return "OK";
+          case "export_provider_config": transferCalls.push({ command, args }); return { path: "C:/Users/user/yi-llm-providers.yillm", providers: providers.length, models: providers.reduce((total, item) => total + item.models.length, 0), standard_models: models.length, terminal_config_warnings: [] };
+          case "import_provider_config": transferCalls.push({ command, args }); return { path: "C:/Users/user/yi-llm-providers.yillm", providers: 2, models: 3, standard_models: 1, terminal_config_warnings: args.filename === "warnings.yillm" ? ["codex 配置未更新：请在终端接入中更新配置"] : [] };
           default: throw ipcError("not_found", `Unmocked IPC command: ${command}`);
         }
       },

@@ -4,7 +4,7 @@ yi-llm 由 Tauri（Rust 后端）和 React（前端）组成。后端提供本�
 
 ## 后端 `src-tauri/src`
 
-按层拆分，依赖方向自上而下：`commands → service → db / catalog / terminal / proxy → domain`。
+按层拆分，依赖方向自上而下：`commands → service → db / catalog / terminal / proxy / backup → domain`。
 
 | 目录 | 职责 |
 | --- | --- |
@@ -12,6 +12,7 @@ yi-llm 由 Tauri（Rust 后端）和 React（前端）组成。后端提供本�
 | `domain/` | 纯数据结构与校验（Provider、标准模型、能力、终端、用量、设置），不依赖 Tauri、SQLite 或 HTTP。 |
 | `db/` | `r2d2` 连接池（WAL、busy timeout）、版本化迁移（`migrations/`）、按聚合划分的 `repo/`，以及 `UsageWriter`（用量异步批量写入）。 |
 | `catalog/` | 标准模型目录 JSON 的读写与校验（原子写入、保留上一份有效缓存）。 |
+| `backup/` | Provider 配置的加密导出 / 导入：PBKDF2-HMAC-SHA256 派生密钥、AES-256-GCM 认证加密，导出文件为「明文参数外壳 + 密文载荷」的 JSON；只依赖 `domain` 与 `error`。 |
 | `service/` | 业务用例：编排 repo、catalog、终端配置和代理生命周期。修改数据库后调用 `AppState::invalidate_routes()` 使路由缓存失效。 |
 | `commands/` | 薄适配层：解析参数、调用 service、返回 `Result<T, AppError>`。 |
 | `proxy/` | axum 路由、请求管线、监控、日志、生命周期状态机；路由表通过 `arc-swap` 缓存，每次请求无锁读取。 |
