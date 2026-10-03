@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   AlertTriangle,
   ArrowUpRight,
@@ -109,7 +109,11 @@ export function TerminalPage() {
     onApplied: () => discardDirectDraft(client),
     onBusyChange: setDirectBusy,
   });
-  useEditorGuard(pendingClients.has(client), busy);
+  const discardTerminalDraft = useCallback(() => {
+    discardDraft(client);
+    discardDirectDraft(client);
+  }, [client, discardDraft, discardDirectDraft]);
+  useEditorGuard(pendingClients.has(client), busy, discardTerminalDraft);
 
   useEffect(() => {
     if (initializedModes.current || !profiles.data) return;

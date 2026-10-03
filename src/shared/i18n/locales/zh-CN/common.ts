@@ -35,7 +35,7 @@ const common = {
     },
     discard: {
       title: "放弃未保存的修改？",
-      description: "当前修改还未保存。返回后需要重新填写。",
+      description: "当前未保存的修改将被丢弃，此操作无法撤销。",
       confirm: "放弃修改",
     },
   },

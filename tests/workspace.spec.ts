@@ -613,3 +613,33 @@ test("import reports terminal configuration warnings instead of silently hiding 
   await dialog.getByRole("button", { name: "导入", exact: true }).click();
   await expect(page.locator(".app-toast")).toContainText("codex 配置未更新");
 });
+
+
+for (const mode of ["proxy", "direct"] as const) {
+  test(`discarding a ${mode} terminal draft prompts once and clears it`, async ({ page }) => {
+    await installBackend(page, "light");
+    await page.goto("/");
+    const sidebar = page.locator(".sidebar");
+    await sidebar.getByRole("button", { name: "终端管理", exact: true }).click();
+    await sidebar.getByRole("button", { name: "Codex CLI", exact: true }).click();
+    if (mode === "proxy") {
+      await page.getByRole("button", { name: "全选", exact: true }).click();
+      await expect(page.getByRole("tab", { name: "代理接入" }).locator(".terminal-mode-state.pending")).toBeVisible();
+    } else {
+      await page.getByRole("tab", { name: "直连接入" }).click();
+      await page.getByRole("radio", { name: /使用 Provider 模型/ }).check();
+      await expect(page.getByRole("tab", { name: "直连接入" }).locator(".terminal-mode-state.pending")).toBeVisible();
+    }
+    await sidebar.getByRole("button", { name: "设置", exact: true }).click();
+    await expect(page.getByRole("dialog")).toHaveCount(1);
+    await page.getByRole("button", { name: "放弃修改", exact: true }).click();
+    await expect(page.getByRole("dialog")).toHaveCount(0);
+    await expect(page.locator("h1:visible")).toHaveText("设置");
+    await sidebar.getByRole("button", { name: "Codex CLI", exact: true }).click();
+    if (mode === "direct") await page.getByRole("tab", { name: "直连接入" }).click();
+    await expect(page.locator(".terminal-mode-state.pending")).toHaveCount(0);
+    await sidebar.getByRole("button", { name: "设置", exact: true }).click();
+    await expect(page.getByRole("dialog")).toHaveCount(0);
+    await expect(page.locator("h1:visible")).toHaveText("设置");
+  });
+}

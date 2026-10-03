@@ -5,9 +5,10 @@ import { useNavigationStore } from "./store";
  * 编辑页向导航层上报状态：`dirty` 时离开需确认，`busy`（保存/应用中）时禁止离开。
  * 组件卸载时自动复位。
  */
-export function useEditorGuard(dirty: boolean, busy = false): void {
+export function useEditorGuard(dirty: boolean, busy = false, onDiscard?: () => void): void {
   const setDirty = useNavigationStore((state) => state.setDirty);
   const setBusy = useNavigationStore((state) => state.setBusy);
+  const setDiscardDraft = useNavigationStore((state) => state.setDiscardDraft);
   useEffect(() => {
     setDirty(dirty);
     return () => setDirty(false);
@@ -16,4 +17,11 @@ export function useEditorGuard(dirty: boolean, busy = false): void {
     setBusy(busy);
     return () => setBusy(false);
   }, [busy, setBusy]);
+  useEffect(() => {
+    if (!onDiscard) return;
+    setDiscardDraft(onDiscard);
+    return () => {
+      if (useNavigationStore.getState().discardDraft === onDiscard) setDiscardDraft(null);
+    };
+  }, [onDiscard, setDiscardDraft]);
 }

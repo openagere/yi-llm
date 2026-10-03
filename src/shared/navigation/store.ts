@@ -26,6 +26,7 @@ interface NavigationState {
   dirty: boolean;
   busy: boolean;
   pendingDiscard: (() => void) | null;
+  discardDraft: (() => void) | null;
 
   /** 执行离开编辑器的动作：忙碌时忽略，有未保存修改时先弹出确认。 */
   guarded: (action: () => void) => void;
@@ -38,6 +39,7 @@ interface NavigationState {
   goTo: (page: Page) => void;
   setDirty: (dirty: boolean) => void;
   setBusy: (busy: boolean) => void;
+  setDiscardDraft: (discard: (() => void) | null) => void;
   confirmDiscard: () => void;
   cancelDiscard: () => void;
   setSidebarCollapsed: (collapsed: boolean) => void;
@@ -52,10 +54,11 @@ export const useNavigationStore = create<NavigationState>((set, get) => ({
   dirty: false,
   busy: false,
   pendingDiscard: null,
+  discardDraft: null,
 
   guarded: (action) => {
-    const { busy, dirty } = get();
-    if (busy) return;
+    const { busy, dirty, pendingDiscard } = get();
+    if (busy || pendingDiscard) return;
     if (dirty) { set({ pendingDiscard: action }); return; }
     action();
   },
@@ -101,10 +104,13 @@ export const useNavigationStore = create<NavigationState>((set, get) => ({
   goTo: (page) => set({ dirty: false, page }),
   setDirty: (dirty) => set({ dirty }),
   setBusy: (busy) => set({ busy }),
+  setDiscardDraft: (discardDraft) => set({ discardDraft }),
   confirmDiscard: () => {
-    const action = get().pendingDiscard;
+    const { pendingDiscard, discardDraft } = get();
+    if (!pendingDiscard) return;
+    discardDraft?.();
     set({ dirty: false, pendingDiscard: null });
-    action?.();
+    pendingDiscard();
   },
   cancelDiscard: () => set({ pendingDiscard: null }),
   setSidebarCollapsed: (sidebarCollapsed) => set({ sidebarCollapsed }),

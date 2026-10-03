@@ -72,7 +72,7 @@ export function useTerminalDrafts(statuses: readonly TerminalStatus[]) {
 
   const setDraft = (profile: TerminalProfile) => setProxyDraft(profile);
 
-  const discardDraft = (client: TerminalClient) => discardProxyDraft(client);
+  const discardDraft = discardProxyDraft;
 
   return { changedClients, draftOf, setDraft, discardDraft };
 }

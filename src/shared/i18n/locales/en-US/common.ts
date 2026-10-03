@@ -37,7 +37,7 @@ const common: DeepString<typeof zh> = {
     },
     discard: {
       title: "Discard unsaved changes?",
-      description: "Your changes haven't been saved. You'll need to re-enter them if you leave.",
+      description: "Your unsaved changes will be discarded. This can't be undone.",
       confirm: "Discard changes",
     },
   },
