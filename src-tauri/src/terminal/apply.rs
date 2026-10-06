@@ -56,7 +56,10 @@ pub fn preview_at(conn: &Connection, profile: &Profile, path: &Path) -> Result<P
             // Preview only owned settings; unrelated credentials and hooks stay private.
             configurator.owned_preview(content)?
         } else {
-            String::from_utf8_lossy(content).into_owned()
+            match configurator.extra_preview(&file.path, content)? {
+                Some(owned) => owned,
+                None => String::from_utf8_lossy(content).into_owned(),
+            }
         };
         previews.push(PreviewFile {
             path: file.path.display().to_string(),

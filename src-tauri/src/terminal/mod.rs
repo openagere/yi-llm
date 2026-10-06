@@ -9,7 +9,9 @@ mod plan;
 mod profile;
 mod resolve;
 
-pub use crate::domain::terminal::{protocol, DirectProfile, Profile, Selection, CLIENTS};
+pub use crate::domain::terminal::{
+    protocol, protocols, selected_protocol, DirectProfile, Profile, Selection, CLIENTS,
+};
 pub use apply::{apply, apply_at, preview, preview_at, ApplyResult, Preview, PreviewFile};
 pub use direct::{
     active as direct_active, apply as apply_direct, apply_at as apply_direct_at,

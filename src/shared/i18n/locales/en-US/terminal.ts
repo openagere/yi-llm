@@ -5,6 +5,7 @@ const terminal: DeepString<typeof zh> = {
   terminal: {
     header: {
       eyebrow: "Terminal management",
+      protocol: "Protocol",
     },
     modeTabs: {
       label: "Terminal access mode",

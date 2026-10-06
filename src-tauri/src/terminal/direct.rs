@@ -15,7 +15,9 @@ fn allowed_protocols(client: &str) -> Result<&'static [&'static str]> {
     match client {
         "codex" => Ok(&["responses"]),
         "claude-code" => Ok(&["anthropic"]),
-        "opencode" => Ok(&["openai_chat", "responses"]),
+        "opencode" => Ok(&["openai_chat", "responses", "anthropic"]),
+        "pi" => Ok(&["anthropic", "openai_chat", "responses"]),
+        "deepseek-harness" => Ok(&["anthropic", "openai_chat", "responses"]),
         _ => Err(AppError::validation("未知终端类型")),
     }
 }
@@ -36,7 +38,12 @@ fn resolve(conn: &Connection, profile: &DirectProfile) -> Result<ProviderView> {
         )));
     }
     match profile.model_source.as_str() {
-        "native" if profile.client != "opencode" => {
+        "native"
+            if !matches!(
+                profile.client.as_str(),
+                "opencode" | "pi" | "deepseek-harness"
+            ) =>
+        {
             if profile
                 .model
                 .as_deref()
@@ -104,7 +111,10 @@ pub fn preview_at(conn: &Connection, profile: &DirectProfile, path: &Path) -> Re
         let content = if file.path == path {
             client.owned_direct_preview(&content)?
         } else {
-            String::from_utf8_lossy(&content).into_owned()
+            match client.extra_preview(&file.path, &content)? {
+                Some(owned) => owned,
+                None => String::from_utf8_lossy(&content).into_owned(),
+            }
         };
         preview_files.push(PreviewFile {
             path: file.path.display().to_string(),

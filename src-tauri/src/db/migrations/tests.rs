@@ -174,6 +174,7 @@ fn providers_without_codes_get_distinct_codes_and_references_follow() {
                     model: "gpt-6-luna(one)".into(),
                 }],
                 default_model: "gpt-6-luna(one)".into(),
+                protocol: None,
             },
         )
         .unwrap();

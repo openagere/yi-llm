@@ -32,7 +32,13 @@ impl ClientConfigurator for Codex {
             .join("config.toml"))
     }
 
-    fn is_active(&self, _path: &Path, source: &str, endpoint: &str) -> Result<bool> {
+    fn is_active(
+        &self,
+        _path: &Path,
+        source: &str,
+        endpoint: &str,
+        _protocol: &str,
+    ) -> Result<bool> {
         let doc = parse_toml(source, "")?;
         Ok(
             doc.get("model_provider").and_then(Item::as_str) == Some("yi")

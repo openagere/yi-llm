@@ -14,7 +14,17 @@
 .terminal-client-heading { min-width: 0; }
 .terminal-client-eyebrow { display: block; margin-bottom: 2px; color: var(--text-muted); font-size: 11px; }
 .terminal-client-heading h1 { margin: 0; color: var(--text-primary); font-size: 20px; font-weight: 620; line-height: 1.25; }
-.terminal-client-heading p { margin: 3px 0 0; color: var(--text-muted); font-size: 11px; }
+/* Protocol chips live under the terminal name in every access mode: mini radio buttons for
+   clients that speak several protocols, a single static chip for the others. */
+.terminal-protocol-switch { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 2px; margin-top: 5px; padding: 2px; border: 1px solid var(--border); border-radius: 7px; background: var(--surface-subtle); }
+.terminal-protocol-switch > button,
+.terminal-protocol-switch > .terminal-protocol-chip { display: inline-flex; align-items: center; gap: 5px; min-height: 20px; padding: 0 7px; border: 1px solid transparent; border-radius: 5px; background: transparent; color: var(--text-muted); font-size: 11px; font-weight: 570; white-space: nowrap; }
+.terminal-protocol-switch > button { cursor: pointer; transition: background .15s, border-color .15s, color .15s; }
+.terminal-protocol-switch > button:hover:not(:disabled) { color: var(--text-primary); }
+.terminal-protocol-switch > button[aria-checked="true"],
+.terminal-protocol-switch > .terminal-protocol-chip { border-color: var(--border-strong); background: var(--surface); color: var(--text-primary); box-shadow: var(--shadow-sm); }
+.terminal-protocol-switch > button:disabled { cursor: default; }
+.terminal-protocol-switch .provider-brand-icon { flex: none; }
 .terminal-header-status { display: flex; align-items: center; gap: 8px; grid-column: 2; grid-row: 1; justify-self: end; color: var(--text-secondary); font-size: 11px; white-space: nowrap; }
 .terminal-header-status strong { font-size: 12px; font-weight: 590; }
 .terminal-header-status > span:last-child:not(.terminal-header-status-dot) { margin-left: 4px; padding-left: 12px; border-left: 1px solid var(--border-strong); color: var(--text-muted); }

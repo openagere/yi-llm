@@ -19,7 +19,13 @@ impl ClientConfigurator for ClaudeCode {
             .join("settings.json"))
     }
 
-    fn is_active(&self, path: &Path, source: &str, endpoint: &str) -> Result<bool> {
+    fn is_active(
+        &self,
+        path: &Path,
+        source: &str,
+        endpoint: &str,
+        _protocol: &str,
+    ) -> Result<bool> {
         let doc = parse_json(path, source)?;
         Ok(doc
             .pointer("/env/ANTHROPIC_BASE_URL")

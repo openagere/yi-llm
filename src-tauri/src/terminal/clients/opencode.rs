@@ -2,7 +2,10 @@ use super::{
     direct_provider_id, direct_startup_model, object, parse_json, user_home, Built,
     ClientConfigurator, DirectPlanInput, PlanInput,
 };
-use crate::error::{AppError, Result};
+use crate::{
+    domain::terminal::selected_protocol,
+    error::{AppError, Result},
+};
 use serde_json::{json, Value};
 use std::{
     env,
@@ -10,6 +13,46 @@ use std::{
 };
 
 pub struct OpenCode;
+
+/// The AI SDK package OpenCode loads for each client protocol. The package decides the wire
+/// API: `openai-compatible` speaks Chat Completions, `openai` prefers Responses and
+/// `anthropic` speaks Messages (its base URL carries the `/v1` prefix).
+fn protocol_npm(protocol: &str) -> Result<&'static str> {
+    match protocol {
+        "openai_chat" => Ok("@ai-sdk/openai-compatible"),
+        "responses" => Ok("@ai-sdk/openai"),
+        "anthropic" => Ok("@ai-sdk/anthropic"),
+        _ => Err(AppError::validation(format!(
+            "OpenCode 不支持 {protocol} 协议"
+        ))),
+    }
+}
+
+/// OpenCode merges a selected variant into provider options; each package expects its own
+/// shape (mirrors OpenCode's own per-package variant generation). `forceReasoning` keeps
+/// effort and summary flowing for models whose ids its AI SDK would not recognise as
+/// reasoning models on its own.
+fn variant(protocol: &str, level: &str) -> Value {
+    match protocol {
+        "responses" => json!({
+            "reasoningEffort":level,
+            "reasoningSummary":"auto",
+            "include":["reasoning.encrypted_content"],
+            "forceReasoning":true
+        }),
+        "anthropic" => json!({"effort":level}),
+        _ => json!({"reasoningEffort":level}),
+    }
+}
+
+/// Provider options applied when no variant is selected.
+fn default_option(protocol: &str, level: &str) -> Value {
+    match protocol {
+        "responses" => json!({"reasoningEffort":level,"forceReasoning":true}),
+        "anthropic" => json!({"effort":level}),
+        _ => json!({"reasoningEffort":level}),
+    }
+}
 
 impl ClientConfigurator for OpenCode {
     fn config_path(&self) -> Result<PathBuf> {
@@ -25,12 +68,14 @@ impl ClientConfigurator for OpenCode {
         Ok(if jsonc.exists() { jsonc } else { json })
     }
 
-    fn is_active(&self, path: &Path, source: &str, endpoint: &str) -> Result<bool> {
+    fn is_active(&self, path: &Path, source: &str, endpoint: &str, protocol: &str) -> Result<bool> {
+        let npm = protocol_npm(protocol)?;
         let doc = parse_json(path, source)?;
         Ok(doc
             .pointer("/provider/yi/options/baseURL")
             .and_then(Value::as_str)
-            == Some(endpoint))
+            == Some(endpoint)
+            && doc.pointer("/provider/yi/npm").and_then(Value::as_str) == Some(npm))
     }
 
     fn build(&self, input: &PlanInput<'_>, path: &Path, source: &str) -> Result<Built> {
@@ -60,10 +105,11 @@ impl ClientConfigurator for OpenCode {
                         .is_some_and(|name| name.starts_with("yi-llm direct:")))
             });
         }
+        let protocol = selected_protocol("opencode", input.profile.protocol.as_deref())?;
         doc["$schema"] = json!("https://opencode.ai/config.json");
         doc["model"] = json!(format!("yi/{}", input.profile.default_model));
         let provider = object(object(&mut doc, "provider")?, "yi")?;
-        provider["npm"] = json!("@ai-sdk/openai-compatible");
+        provider["npm"] = json!(protocol_npm(protocol)?);
         provider["name"] = json!("yi");
         let options = object(provider, "options")?;
         options["baseURL"] = json!(input.endpoint);
@@ -77,8 +123,8 @@ impl ClientConfigurator for OpenCode {
                     let upstream = &model.provider.provider_type;
                     let mut entry = json!({"name":model.selection.model});
                     entry["modalities"] = json!({
-                        "input":caps.input_for("openai_chat", upstream),
-                        "output":caps.output_for("openai_chat", upstream)
+                        "input":caps.input_for(protocol, upstream),
+                        "output":caps.output_for(protocol, upstream)
                     });
                     // OpenCode's native schema requires both limit fields.
                     if let (Some(context), Some(output)) =
@@ -86,13 +132,16 @@ impl ClientConfigurator for OpenCode {
                     {
                         entry["limit"] = json!({"context":context,"output":output});
                     }
-                    let levels = caps.efforts_for("openai_chat", upstream);
+                    let levels = caps.efforts_for(protocol, upstream);
                     if !levels.is_empty() {
-                        entry["reasoning"] = json!(true);
+                        // The `reasoning` flag stays off on purpose: OpenCode would merge its
+                        // own variant defaults into ours (Anthropic gains budget-based thinking
+                        // that pushes `max_tokens` past the declared output limit) and would
+                        // offer levels the model never declared.
                         entry["variants"] = Value::Object(
                             levels
                                 .iter()
-                                .map(|level| (level.clone(), json!({"reasoningEffort":level})))
+                                .map(|level| (level.clone(), variant(protocol, level)))
                                 .collect(),
                         );
                         if let Some(default) = caps
@@ -101,7 +150,7 @@ impl ClientConfigurator for OpenCode {
                             .as_ref()
                             .filter(|level| levels.contains(level))
                         {
-                            entry["options"] = json!({"reasoningEffort":default});
+                            entry["options"] = default_option(protocol, default);
                         }
                     }
                     (model.selection.model.clone(), entry)
@@ -138,15 +187,18 @@ impl ClientConfigurator for OpenCode {
                 )));
             }
         }
+        let protocol = provider.provider_type.as_str();
         let entry = object(providers, &id)?;
-        entry["npm"] = json!(if provider.provider_type == "responses" {
-            "@ai-sdk/openai"
-        } else {
-            "@ai-sdk/openai-compatible"
-        });
+        entry["npm"] = json!(protocol_npm(protocol)?);
         entry["name"] = json!(format!("yi-llm direct:{}", provider.id));
         let options = object(entry, "options")?;
-        options["baseURL"] = json!(provider.base_url.trim_end_matches('/'));
+        // The AI SDK anthropic provider appends `/messages` and expects the `/v1` prefix in
+        // its base URL; Chat/Responses providers already store it in their base URL.
+        options["baseURL"] = json!(if protocol == "anthropic" {
+            format!("{}/v1", provider.base_url.trim_end_matches('/'))
+        } else {
+            provider.base_url.trim_end_matches('/').to_owned()
+        });
         if provider.api_key.trim().is_empty() {
             options.as_object_mut().unwrap().remove("apiKey");
         } else {
@@ -166,11 +218,12 @@ impl ClientConfigurator for OpenCode {
             }
             let levels = caps.efforts_for(upstream, upstream);
             if !levels.is_empty() {
-                entry["reasoning"] = json!(true);
+                // See `build`: the reasoning flag stays off so OpenCode does not merge its own
+                // variant defaults or offer levels the model never declared.
                 entry["variants"] = Value::Object(
                     levels
                         .iter()
-                        .map(|level| (level.clone(), json!({"reasoningEffort":level})))
+                        .map(|level| (level.clone(), variant(protocol, level)))
                         .collect(),
                 );
                 if let Some(default) = caps
@@ -179,7 +232,7 @@ impl ClientConfigurator for OpenCode {
                     .as_ref()
                     .filter(|level| levels.contains(level))
                 {
-                    entry["options"] = json!({"reasoningEffort":default});
+                    entry["options"] = default_option(protocol, default);
                 }
             }
             models.insert(model.upstream_model.clone(), entry);
@@ -232,6 +285,12 @@ impl ClientConfigurator for OpenCode {
     ) -> Result<bool> {
         let doc = parse_json(path, source)?;
         let id = direct_provider_id(&profile.provider_id);
+        let protocol = provider.provider.provider_type.as_str();
+        let expected_base = if protocol == "anthropic" {
+            format!("{}/v1", provider.provider.base_url.trim_end_matches('/'))
+        } else {
+            provider.provider.base_url.trim_end_matches('/').to_owned()
+        };
         let base_url = doc
             .pointer(&format!("/provider/{id}/options/baseURL"))
             .and_then(Value::as_str);
@@ -241,11 +300,13 @@ impl ClientConfigurator for OpenCode {
                 .pointer(&format!("/provider/{id}/options/apiKey"))
                 .and_then(Value::as_str)
                 == Some(provider.provider.api_key.as_str());
-        Ok(
-            base_url == Some(provider.provider.base_url.trim_end_matches('/'))
-                && model.is_some_and(|model| model.starts_with(&format!("{id}/")))
-                && key_matches,
-        )
+        Ok(base_url == Some(expected_base.as_str())
+            && doc
+                .pointer(&format!("/provider/{id}/npm"))
+                .and_then(Value::as_str)
+                == Some(protocol_npm(protocol)?)
+            && model.is_some_and(|model| model.starts_with(&format!("{id}/")))
+            && key_matches)
     }
 
     fn owned_preview(&self, content: &[u8]) -> Result<String> {

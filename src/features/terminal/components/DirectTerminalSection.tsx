@@ -6,7 +6,7 @@ import { useI18n } from "@/shared/i18n";
 import { PROTOCOLS_BY_ID } from "@/shared/lib";
 import { ProviderIcon, Select } from "@/shared/ui";
 import { useApplyTerminalDirectConfig, useTerminalDirectPreview } from "../hooks";
-import { directCompatibleProviders } from "../selection";
+import { directCompatibleProviders, terminalName, usesProviderModels } from "../selection";
 import type { TerminalClient, TerminalDirectProfile } from "../types";
 
 interface ControllerOptions {
@@ -50,7 +50,7 @@ export function useDirectTerminalController({
   const currentFile = preview.preview?.files[Math.min(fileIndex, (preview.preview?.files.length ?? 1) - 1)];
   const busy = apply.isPending;
   const readyToApply = canPreview && Boolean(preview.preview) && !preview.pending && !preview.error;
-  const clientName = client === "codex" ? "Codex CLI" : client === "claude-code" ? "Claude Code" : "OpenCode";
+  const clientName = terminalName(client);
 
   useEffect(() => {
     onBusyChange(busy);
@@ -126,7 +126,7 @@ export function DirectTerminalSection({ client, profile, disabled, controller }:
     backupPaths,
     applyError,
   } = controller;
-  const clientName = client === "codex" ? "Codex CLI" : client === "claude-code" ? "Claude Code" : "OpenCode";
+  const clientName = terminalName(client);
 
   return (
     <div className="terminal-layout terminal-direct-layout">
@@ -161,7 +161,7 @@ export function DirectTerminalSection({ client, profile, disabled, controller }:
           <div className="terminal-step terminal-step-last">
             <div className="terminal-step-content terminal-direct-field">
               <span className="terminal-direct-label">{t("terminal.direct.modelSource")}</span>
-              {client !== "opencode" && (
+              {!usesProviderModels(client) && (
                 <div
                   className="terminal-direct-options"
                   role="radiogroup"

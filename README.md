@@ -18,7 +18,7 @@
 
 **yi-llm** 是一款基于 Tauri 的桌面应用，在你的电脑上运行一个本地多协议模型代理：它同时接受 **OpenAI Responses**、**OpenAI Chat Completions** 与 **Anthropic Messages** 三种协议的请求，并按你配置的路由规则转发到 Anthropic Messages、OpenAI Chat Completions 或 Responses API 上游 Provider。Provider 默认使用其原生协议直通；在设置中开启其它客户端协议后，代理会自动完成请求与响应的双向转换。
 
-Provider 配置、模型映射与 token 用量保存在本地 SQLite 中；标准模型定义存放在可纳入 Git 版本管理的 JSON 目录（`models/catalog.json`）中，便于共享与评审。应用还提供实时代理监控、用量统计，以及面向 Codex CLI / Claude Code / OpenCode 等终端客户端的一键配置能力。界面支持简体中文 / 英文与浅色 / 深色主题。
+Provider 配置、模型映射与 token 用量保存在本地 SQLite 中；标准模型定义存放在可纳入 Git 版本管理的 JSON 目录（`models/catalog.json`）中，便于共享与评审。应用还提供实时代理监控、用量统计，以及面向 Codex CLI / Claude Code / OpenCode / Pi 等终端客户端的一键配置能力。界面支持简体中文 / 英文与浅色 / 深色主题。
 
 ## 界面预览
 
@@ -48,7 +48,7 @@ Provider 配置、模型映射与 token 用量保存在本地 SQLite 中；标�
 
 ### 终端接入
 
-为 Codex CLI、Claude Code、OpenCode 生成并应用托管配置，含模型分组、默认模型与配置预览。
+为 Codex CLI、Claude Code、OpenCode、Pi、DeepSeek Harness 生成并应用托管配置，含模型分组、默认模型与配置预览。
 
 ![终端接入](docs/images/terminal.png)
 
@@ -58,7 +58,7 @@ Provider 配置、模型映射与 token 用量保存在本地 SQLite 中；标�
 - 🔀 **跨协议双向转换**：文本对话、图片输入、function tools 与结果、Responses 命名空间工具、自定义文本工具、推理内容、token 上限与 JSON Schema 结构化输出均可跨协议翻译。
 - 🧩 **标准模型目录**：模型定义与 Provider 解耦，多个 Provider 可引用同一标准模型；目录为可版本化、可共享的 JSON 文件，带编辑器 schema 与原子写入。
 - 📈 **实时监控与用量统计**：连接数、请求数、错误率、收发流量图表与运行日志；token 用量按日 / 模型 / 协议汇总，含调用明细与 CSV 导出。
-- 🖥️ **终端一键接入**：为 Codex CLI、Claude Code、OpenCode 生成托管配置，合并写入、自动备份、失败回滚，并支持原生模型选择器。
+- 🖥️ **终端一键接入**：为 Codex CLI、Claude Code、OpenCode、Pi、DeepSeek Harness 生成托管配置，合并写入、自动备份、失败回滚，并支持原生模型选择器。
 - 🌗 **双语界面与主题**：简体中文 / 英文界面，浅色 / 深色主题，统一的设计令牌与字体栈。
 - 🔒 **纯本地运行**：配置与用量仅存于本地 SQLite；本地代理无需鉴权，SDK key 可使用占位符 `yi`。
 
@@ -103,10 +103,12 @@ UI 测试使用 `npm run test:ui`（Playwright）；先执行 `npx playwright in
 | Codex CLI                      | `http://127.0.0.1:11435/clients/codex/v1`         |
 | Claude Code                    | `http://127.0.0.1:11435/clients/claude-code`      |
 | OpenCode                       | `http://127.0.0.1:11435/clients/opencode/v1`      |
+| Pi                             | `http://127.0.0.1:11435/clients/pi/v1`            |
+| DeepSeek Harness                | `http://127.0.0.1:11435/clients/deepseek-harness/v1` |
 
 「Proxy → 协议地址」页展示各协议 Base URL 与完整请求 URL，可一键复制并显示兼容 Provider 数量。本地代理不校验鉴权，SDK key 填占位符 `yi` 即可。
 
-终端专用端点仅暴露所选模型集合：未知模型、未启用协议、被禁用 Provider 或已迁移模型都会被拒绝，且不回退到全局默认 Provider。修改监听地址或模型集合后需重新应用终端配置。
+终端专用端点仅暴露所选模型集合：未知模型、未启用协议、被禁用 Provider 或已迁移模型都会被拒绝，且不回退到全局默认 Provider。修改监听地址、模型集合或接入协议后需重新应用终端配置；Pi 选择 Anthropic Messages 时使用 `http://127.0.0.1:11435/clients/pi`，OpenCode 则始终使用 `http://127.0.0.1:11435/clients/opencode/v1`；DeepSeek Harness 选择 Anthropic Messages 时使用 `http://127.0.0.1:11435/clients/deepseek-harness`，其余协议用 `.../clients/deepseek-harness/v1`。
 
 ## 模型管理
 
@@ -120,22 +122,25 @@ UI 测试使用 `npm run test:ui`（Playwright）；先执行 `npx playwright in
 
 ## 终端接入
 
-在「终端」页选择客户端、勾选启用的 Provider 与模型集合、设定默认模型，即可生成托管配置并应用到本地配置文件。
+在「终端」页选择客户端、勾选启用的 Provider 与模型集合、设定默认模型，即可生成托管配置并应用到本地配置文件。终端名称下方以图标展示接入协议：支持多种协议的终端（Pi、OpenCode、DeepSeek Harness）以可点击的小图标单选（可选集合由该终端决定），单协议终端以同一风格展示其单个协议图标；模型集合、托管配置与代理路由都按所选协议生成，代理与直连页签下均可见。
 
 | 客户端      | 协议                    | 原生模型选择 | 托管文件                                                       |
 | ----------- | ----------------------- | ------------ | -------------------------------------------------------------- |
 | Codex CLI   | OpenAI Responses        | `/model`   | `~/.codex/config.toml`, `yi-models.json`                   |
 | Claude Code | Anthropic Messages      | `/model`   | `~/.claude/settings.json`                                    |
-| OpenCode    | OpenAI Chat Completions | `/models`  | `~/.config/opencode/opencode.json` 或已有 `opencode.jsonc` |
+| OpenCode    | Chat / Responses / Anthropic Messages（可选） | `/models`  | `~/.config/opencode/opencode.json` 或已有 `opencode.jsonc` |
+| Pi          | Chat / Responses / Anthropic Messages（可选） | `/model`   | `~/.pi/agent/models.json`, `~/.pi/agent/settings.json`      |
+| DeepSeek Harness | Chat / Responses / Anthropic Messages（可选） | dsh 模型选择器 | `$DSH_HOME/profiles/desktop/cordis.patch.yml`（无桌面端 profile 时写 `web`） |
 
-上述路径尊重 `CODEX_HOME`、`CLAUDE_CONFIG_DIR`、`XDG_CONFIG_HOME` 与 `OPENCODE_CONFIG`。应用配置时与现有文件合并、为被覆盖文件创建备份并原子替换；写文件或保存集合失败时自动恢复原文件。预览仅展示托管设置，不包含无关凭据与 hooks。
+上述路径尊重 `CODEX_HOME`、`CLAUDE_CONFIG_DIR`、`XDG_CONFIG_HOME`、`OPENCODE_CONFIG` 与 `PI_CODING_AGENT_DIR`；DeepSeek Harness 使用 `DSH_HOME`（默认 `~/.dsh`），存在桌面端 profile 时写入 `profiles/desktop`，否则写 CLI 默认的 `profiles/web`。应用配置时与现有文件合并、为被覆盖文件创建备份并原子替换；写文件或保存集合失败时自动恢复原文件。预览仅展示托管设置，不包含无关凭据与 hooks。
 
-Codex 使用原生 `model_catalog_json` 目录，`/model` 会列出所选模型及其能力；Claude Code 使用原生 `modelPicker.options`，要求 **2.1.242 及以上**；OpenCode 使用官方 OpenAI 兼容 provider 配置。原生模型选择已在 Codex **0.158.0**、Claude Code **2.1.283**、OpenCode **1.14.50** 上验证。应用配置后请重启终端会话；代理需在终端发送请求时保持运行。
+Codex 使用原生 `model_catalog_json` 目录，`/model` 会列出所选模型及其能力；Claude Code 使用原生 `modelPicker.options`，要求 **2.1.242 及以上**；OpenCode 按所选协议加载官方 AI SDK provider（`@ai-sdk/openai-compatible` / `@ai-sdk/openai` / `@ai-sdk/anthropic`）；Pi 使用原生 `models.json` 自定义 provider 与 `settings.json` 默认模型，并可按所选协议以 `openai-completions` / `openai-responses` / `anthropic-messages` 接入。端点形式按客户端区分：Pi 选择 Anthropic Messages 时使用 `http://127.0.0.1:11435/clients/pi`（无 `/v1` 路径，其余协议用 `.../clients/pi/v1`）；OpenCode 的（Anthropic）Messages 与其它协议一样使用 `http://127.0.0.1:11435/clients/opencode/v1`（SDK 仅追加 `/messages`）。切换协议后需重新应用终端配置。DeepSeek Harness 通过 `llm-pi-ai` 插件路由接入（`openai-completions` / `openai-responses` / `anthropic-messages`），并把默认模型同步进已有 `agent-loop` 主代理；直连模式遵循 dsh 的凭据机制，仅写入 `apiKeyEnv` 引用（如 `YI_LLM_DIRECT_*`），值由 yi-llm 在应用时写入 dsh 的凭据存储 `$DSH_HOME/.credentials.yaml`（代理路由为占位符 `yi`，直连路由为 Provider 真实密钥），并清理过期的直连引用；桌面端会热加载凭据存储，无需重启。原生模型选择已在 Codex **0.158.0**、Claude Code **2.1.283**、OpenCode **1.14.50** 上验证。应用配置后请重启终端会话；代理需在终端发送请求时保持运行。
 
 ## 协议能力与限制
 
 - 跨协议转换覆盖：文本对话、图片输入（Anthropic 上游要求 base64 data URL）、function tools 与结果、Responses 命名空间工具（上游扁平化、输出还原）、自定义文本工具、推理文本、token 上限与 JSON Schema 结构化输出（`text.format` → Anthropic `output_config.format` / Chat `response_format`）。
 - 推理 payloads 跨轮保留：Anthropic `signature_delta` / `redacted_thinking` 以 reasoning item 的 `encrypted_content` 呈现并在下一轮回传；Chat Completions 的 `reasoning_content` 在 assistant 消息上重放并映射为推理输出。
+- 推理档位：客户端发送 `default` / `off` 档位时，代理分别解析为模型配置的默认档位（未配置默认档位时取模型支持档位中最低的一个）与「不发送思考档位」（`off`,以及 OpenAI 兼容写法 `none`）；无推理能力的模型直接省略该字段，由端点自行决定。
 - 提示缓存用量通过 `input_tokens_details.cached_tokens` 上报。
 - 有状态 Responses 请求（`store=true` 或 `previous_response_id`）与文件输入在跨协议转换时被拒绝。
 - Responses 服务端工具（如 `web_search`）在上游无法执行时被省略；其它内置工具需要原生 Responses 上游。原生连接保留 Provider 专属请求字段。

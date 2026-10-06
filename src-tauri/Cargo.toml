@@ -1,6 +1,6 @@
 [package]
 name = "yi-llm"
-version = "0.1.0"
+version = "0.1.1"
 description = "Local multi-protocol LLM gateway and management desktop app"
 authors = ["peng.yi"]
 license = "MIT"
@@ -38,6 +38,7 @@ bytes = "1"
 async-stream = "0.3"
 toml_edit = "0.25"
 json5 = "0.4"
+serde_yaml = "0.9"
 tempfile = "3"
 r2d2 = "0.8.10"
 arc-swap = "1.9.2"

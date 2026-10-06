@@ -171,6 +171,8 @@ impl Monitor {
                 "codex" => "codex",
                 "claude-code" => "claude-code",
                 "opencode" => "opencode",
+                "pi" => "pi",
+                "deepseek-harness" => "deepseek-harness",
                 _ => "unknown",
             }
         } else {

@@ -62,6 +62,7 @@ async fn terminal_collection_routes_multiple_providers_and_never_falls_back() {
             client: "codex".into(),
             models: selections,
             default_model: "real-one(one)".into(),
+            protocol: None,
         },
     )
     .unwrap();
@@ -188,6 +189,7 @@ async fn shared_catalog_file_changes_apply_to_running_requests_and_model_lists()
                 model: "public-model".into(),
             }],
             default_model: "public-model".into(),
+            protocol: None,
         },
     )
     .unwrap();
@@ -318,6 +320,7 @@ async fn codex_readable_model_uses_bound_capabilities_and_internal_usage_identit
                 model: "real-model(primary)".into(),
             }],
             default_model: "real-model(primary)".into(),
+            protocol: None,
         },
     )
     .unwrap();

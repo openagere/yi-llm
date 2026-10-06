@@ -1,6 +1,6 @@
 use crate::{
     db::repo::{settings, terminal_direct_profiles},
-    domain::terminal::{protocol, Profile},
+    domain::terminal::{protocol, protocols, selected_protocol, Profile},
     error::{AppError, Result},
     proxy::routing::RouteTable,
     terminal::{
@@ -34,9 +34,13 @@ pub fn config_path(client: &str) -> Result<PathBuf> {
     configurator(client)?.config_path()
 }
 
-/// Base URL a client should use to reach the proxy's client-scoped entrypoint.
-pub fn endpoint(conn: &Connection, client: &str) -> Result<String> {
-    protocol(client)?;
+/// Base URL a client uses to reach one of its proxy entrypoints. Anthropic Messages keeps
+/// the bare client root because the Anthropic SDK appends `/v1/messages` itself; OpenCode's
+/// AI SDK only appends `/messages`, so it receives the `/v1` base like the other protocols.
+pub fn endpoint_for(conn: &Connection, client: &str, protocol: &str) -> Result<String> {
+    if !protocols(client)?.contains(&protocol) {
+        return Err(AppError::validation("该终端不支持请求的协议"));
+    }
     let settings = settings::get(conn)?;
     let ip: std::net::IpAddr = settings
         .host
@@ -56,24 +60,40 @@ pub fn endpoint(conn: &Connection, client: &str) -> Result<String> {
     } else {
         ip.to_string()
     };
+    let suffix = if protocol == "anthropic" && client != "opencode" {
+        ""
+    } else {
+        "/v1"
+    };
     Ok(format!(
-        "http://{host}:{}/clients/{client}{}",
-        settings.port,
-        if client == "claude-code" { "" } else { "/v1" }
+        "http://{host}:{}/clients/{client}{suffix}",
+        settings.port
     ))
+}
+
+/// Base URL for the client's primary protocol.
+pub fn endpoint(conn: &Connection, client: &str) -> Result<String> {
+    endpoint_for(conn, client, protocol(client)?)
 }
 
 pub fn status(conn: &Connection, client: &str) -> Result<Status> {
     let path = config_path(client)?;
     let configurator = configurator(client)?;
-    let expected_endpoint = endpoint(conn, client)?;
+    let profile = profile::load(conn, client)?;
+    let protocol = selected_protocol(
+        client,
+        profile
+            .as_ref()
+            .and_then(|profile| profile.protocol.as_deref()),
+    )?;
+    let expected_endpoint = endpoint_for(conn, client, protocol)?;
     let exists = path.exists();
     let read_active = || -> Result<bool> {
         if !exists {
             return Ok(false);
         }
         let source = fs::read_to_string(&path)?;
-        configurator.is_active(&path, &source, &expected_endpoint)
+        configurator.is_active(&path, &source, &expected_endpoint, protocol)
     };
     let (proxy_active, config_error) = match read_active() {
         Ok(active) => (active, None),
@@ -98,7 +118,7 @@ pub fn status(conn: &Connection, client: &str) -> Result<Status> {
         active,
         active_mode: active_mode.into(),
         config_error,
-        profile: profile::load(conn, client)?,
+        profile,
         direct_profile,
     })
 }
@@ -110,7 +130,8 @@ pub fn plan(
     path: &Path,
 ) -> Result<(String, Vec<FileChange>)> {
     let models = validate_in(&RouteTable::load(conn)?, profile)?;
-    let endpoint = endpoint(conn, &profile.client)?;
+    let protocol = selected_protocol(&profile.client, profile.protocol.as_deref())?;
+    let endpoint = endpoint_for(conn, &profile.client, protocol)?;
     let source = read_optional(path)?.unwrap_or_default();
     let built = configurator(&profile.client)?.build(
         &PlanInput {

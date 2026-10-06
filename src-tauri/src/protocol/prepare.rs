@@ -1,5 +1,5 @@
 use crate::domain::{
-    capabilities::{Capabilities, Modality, Support},
+    capabilities::{effort_levels, Capabilities, Modality, Support},
     provider::Provider,
 };
 use serde_json::{json, Value};
@@ -54,6 +54,112 @@ fn set_effort(body: &mut Value, protocol: &str, effort: &str) -> Result<(), Stri
         body[container][field] = json!(effort);
     }
     Ok(())
+}
+
+/// The smallest level in `levels`, following the canonical effort order.
+fn lowest_effort(protocol: &str, levels: &[String]) -> Option<String> {
+    effort_levels(protocol)
+        .iter()
+        .find(|candidate| levels.iter().any(|level| level == *candidate))
+        .map(|candidate| (*candidate).to_string())
+}
+
+fn remove_effort(body: &mut Value, protocol: &str) {
+    let (container, field) = match protocol {
+        "responses" => ("reasoning", "effort"),
+        "anthropic" => ("output_config", "effort"),
+        _ => ("", "reasoning_effort"),
+    };
+    if container.is_empty() {
+        if let Some(object) = body.as_object_mut() {
+            object.remove(field);
+        }
+    } else if let Some(config) = body.get_mut(container).and_then(Value::as_object_mut) {
+        config.remove(field);
+    }
+}
+
+/// How the proxy settles one named effort id a harness-style client sent.
+enum SettledEffort {
+    /// The request carries this concrete level.
+    Level(String),
+    /// No reasoning option goes out at all: the client asked for none (`off`/`none`) or
+    /// the model serves no level this conversion can carry.
+    Cleared,
+}
+
+/// Settle a named effort id against the model's own declared levels, or `None`
+/// when the id is not one this proxy resolves.
+///
+/// `default` is the model's configured default level, falling back to the
+/// model's smallest level; `off`, and its OpenAI-compatible spelling `none`, ask
+/// for no thinking, so no option goes out.
+/// Candidates are the model's declared levels narrowed to the ones this
+/// conversion carries, so a settled level is always one the upstream accepts.
+fn settle_effort(
+    capabilities: &Capabilities,
+    protocol: &str,
+    upstream: &str,
+    requested: &str,
+) -> Option<SettledEffort> {
+    match requested {
+        "off" | "none" => Some(SettledEffort::Cleared),
+        "default" => {
+            let levels = capabilities.efforts_for(protocol, upstream);
+            let configured = capabilities
+                .effort
+                .default
+                .as_deref()
+                .filter(|configured| levels.iter().any(|level| level.as_str() == *configured));
+            match configured
+                .map(str::to_owned)
+                .or_else(|| lowest_effort(protocol, &levels))
+            {
+                Some(level) => Some(SettledEffort::Level(level)),
+                None => Some(SettledEffort::Cleared),
+            }
+        }
+        _ => None,
+    }
+}
+
+/// Settle the `default`/`off`/`none` effort ids a harness-style client may send,
+/// reporting whether the request's effort was settled here. A settled request
+/// skips the validation and default injection below: a concrete level was
+/// written, or the option was cleared. Every other value stays for validation.
+fn resolve_named_effort(
+    body: &mut Value,
+    protocol: &str,
+    capabilities: &Capabilities,
+    upstream: &str,
+) -> Result<bool, String> {
+    let effort = match protocol {
+        "responses" => body.pointer("/reasoning/effort"),
+        "anthropic" => body.pointer("/output_config/effort"),
+        _ => body.get("reasoning_effort"),
+    };
+    let Some(Value::String(requested)) = effort else {
+        return Ok(false);
+    };
+    let Some(settled) = settle_effort(capabilities, protocol, upstream, requested) else {
+        return Ok(false);
+    };
+    let level = match settled {
+        SettledEffort::Level(level) => Some(level),
+        SettledEffort::Cleared => None,
+    };
+    // Anthropic couples effort with thinking: a fixed budget already decides the
+    // effort, so a settled level cannot add one — mirroring the absent-effort guard.
+    let level = level.filter(|_| {
+        protocol != "anthropic"
+            || body.get("thinking").is_none_or(Value::is_null)
+            || body.pointer("/thinking/type").and_then(Value::as_str) == Some("adaptive")
+    });
+    match level {
+        Some(level) => set_effort(body, protocol, &level)?,
+        None => remove_effort(body, protocol),
+    }
+    Ok(true)
 }
 
 pub fn prepare_request(
@@ -142,13 +248,14 @@ pub fn prepare_request(
             body[fields[0]] = json!(limit);
         }
     }
+    let settled = resolve_named_effort(body, protocol, capabilities, &provider.provider_type)?;
     let effort = match protocol {
         "responses" => body.pointer("/reasoning/effort"),
         "anthropic" => body.pointer("/output_config/effort"),
         _ => body.get("reasoning_effort"),
     }
     .filter(|value| !value.is_null());
-    if capabilities.effort.support != Support::Unknown {
+    if !settled && capabilities.effort.support != Support::Unknown {
         if let Some(effort) = effort {
             capabilities.validate_effort(Some(effort), protocol, &provider.provider_type)?;
         } else if let Some(default) = &capabilities.effort.default {
@@ -322,5 +429,140 @@ mod tests {
         assert_eq!(body["output_config"]["effort"], "xhigh");
         value.effort.levels.push("ultra".into());
         assert!(value.validate("anthropic").is_err());
+    }
+    #[test]
+    fn named_default_effort_resolves_to_configured_default_then_lowest() {
+        // The model's configured default wins when it survives the conversion.
+        let mut value = caps();
+        let mut body = json!({"reasoning_effort":"default"});
+        prepare_request(
+            &mut body,
+            "openai_chat",
+            &mut provider("openai_chat"),
+            &value,
+        )
+        .unwrap();
+        assert_eq!(body["reasoning_effort"], "low");
+
+        // Without a configured default, the lowest supported level is used.
+        value.effort.default = None;
+        let mut body = json!({"reasoning_effort":"default"});
+        prepare_request(
+            &mut body,
+            "openai_chat",
+            &mut provider("openai_chat"),
+            &value,
+        )
+        .unwrap();
+        assert_eq!(body["reasoning_effort"], "low");
+
+        // Levels the conversion drops never become the fallback.
+        value.effort.levels = vec!["xhigh".into(), "max".into()];
+        value.effort.default = Some("low".into());
+        let mut body = json!({"reasoning_effort":"default"});
+        prepare_request(
+            &mut body,
+            "openai_chat",
+            &mut provider("openai_chat"),
+            &value,
+        )
+        .unwrap();
+        assert_eq!(body["reasoning_effort"], "xhigh");
+
+        // Models without effort support drop the field instead of failing.
+        value.effort = Effort {
+            support: Support::Unsupported,
+            ..Default::default()
+        };
+        let mut body = json!({"reasoning_effort":"default"});
+        prepare_request(
+            &mut body,
+            "openai_chat",
+            &mut provider("openai_chat"),
+            &value,
+        )
+        .unwrap();
+        assert!(body.get("reasoning_effort").is_none());
+
+        // Undeclared-effort models collapse a named default to no effort too,
+        // while explicit levels keep flowing through untouched.
+        let mut body = json!({"reasoning_effort":"default"});
+        prepare_request(
+            &mut body,
+            "openai_chat",
+            &mut provider("openai_chat"),
+            &Capabilities::default(),
+        )
+        .unwrap();
+        assert!(body.get("reasoning_effort").is_none());
+        let mut body = json!({"reasoning_effort":"high"});
+        prepare_request(
+            &mut body,
+            "openai_chat",
+            &mut provider("openai_chat"),
+            &Capabilities::default(),
+        )
+        .unwrap();
+        assert_eq!(body["reasoning_effort"], "high");
+
+        // The responses container path resolves the same way.
+        let mut body = json!({"reasoning":{"effort":"default"}});
+        prepare_request(&mut body, "responses", &mut provider("responses"), &caps()).unwrap();
+        assert_eq!(body.pointer("/reasoning/effort").unwrap(), "low");
+    }
+    #[test]
+    fn anthropic_named_default_resolves_only_while_thinking_stays_adaptive() {
+        let value = caps();
+        let mut body = json!({"thinking":{"type":"adaptive"},"output_config":{"effort":"default"}});
+        prepare_request(&mut body, "anthropic", &mut provider("anthropic"), &value).unwrap();
+        assert_eq!(body["output_config"]["effort"], "low");
+        let mut body = json!({"thinking":{"type":"enabled","budget_tokens":1024},"output_config":{"effort":"default"}});
+        prepare_request(&mut body, "anthropic", &mut provider("anthropic"), &value).unwrap();
+        assert!(body.pointer("/output_config/effort").is_none());
+        assert_eq!(body["thinking"]["budget_tokens"], 1024);
+    }
+    #[test]
+    fn off_effort_clears_the_option_instead_of_failing() {
+        let mut value = caps();
+        for requested in ["off", "none"] {
+            for protocol in ["responses", "openai_chat"] {
+                let mut body = if protocol == "responses" {
+                    json!({"reasoning": {"effort": requested}})
+                } else {
+                    json!({"reasoning_effort": requested})
+                };
+                prepare_request(&mut body, protocol, &mut provider(protocol), &value).unwrap();
+                let present = if protocol == "responses" {
+                    body.pointer("/reasoning/effort").is_some()
+                } else {
+                    body.get("reasoning_effort").is_some()
+                };
+                assert!(!present, "{requested}/{protocol} should clear the option");
+            }
+        }
+        // An explicit off/none is honoured even when the model configures a default.
+        value.effort.default = Some("high".into());
+        for requested in ["off", "none"] {
+            let mut body = json!({"reasoning_effort": requested});
+            prepare_request(
+                &mut body,
+                "openai_chat",
+                &mut provider("openai_chat"),
+                &value,
+            )
+            .unwrap();
+            assert!(
+                body.get("reasoning_effort").is_none(),
+                "{requested} must not gain a default"
+            );
+        }
+        // Anthropic keeps a fixed thinking budget it already carries.
+        let mut body = json!({
+            "thinking": {"type": "enabled", "budget_tokens": 512},
+            "output_config": {"effort": "none"}
+        });
+        prepare_request(&mut body, "anthropic", &mut provider("anthropic"), &value).unwrap();
+        assert!(body.pointer("/output_config/effort").is_none());
+        assert_eq!(body["thinking"]["budget_tokens"], 512);
     }
 }

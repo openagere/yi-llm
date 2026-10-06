@@ -48,6 +48,7 @@ async fn large_codex_responses_preserve_history_images_and_tools_upstream() {
                 model: "public-model".into(),
             }],
             default_model: "public-model".into(),
+            protocol: None,
         },
     )
     .unwrap();
@@ -147,6 +148,7 @@ async fn native_terminal_routes_preserve_client_headers_and_upstream_model_case(
                     model: "public-model".into(),
                 }],
                 default_model: "public-model".into(),
+                protocol: None,
             },
         )
         .unwrap();
@@ -257,6 +259,7 @@ async fn non_standard_model_adapts_native_and_codex_requests_without_changing_st
                 model: "public-model".into(),
             }],
             default_model: "public-model".into(),
+            protocol: None,
         },
     )
     .unwrap();

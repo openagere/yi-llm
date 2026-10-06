@@ -19,7 +19,7 @@ import { ModelCapabilitySummary } from "@/features/models";
 import { useProviders, type ProviderView } from "@/features/providers";
 import { describeError } from "@/shared/api";
 import { useI18n } from "@/shared/i18n";
-import { PROTOCOLS_BY_ID } from "@/shared/lib";
+import { PROTOCOLS_BY_ID, type ProviderType } from "@/shared/lib";
 import { TERMINAL_PAGE_CLIENTS, useEditorGuard, useNavigationStore } from "@/shared/navigation";
 import { ProviderIcon, Select } from "@/shared/ui";
 import { useApplyTerminalConfig, useTerminalPreview, useTerminalProfiles } from "../hooks";
@@ -29,9 +29,11 @@ import {
   buildProfile,
   compatibleProviders,
   directCompatibleProviders,
+  draftProtocol,
   emptyDirectProfile,
   filterProviders,
   groupKey,
+  protocolFor,
   providerSelections,
   selectionKey,
 } from "../selection";
@@ -66,6 +68,12 @@ export function TerminalPage() {
 
   const terminal = TERMINALS.find((item) => item.id === client)!;
   const profile = draftOf(client);
+  /** 当前接入协议：多协议终端取自草稿，单协议终端固定为其唯一协议。 */
+  const protocol = useMemo(
+    () => protocolFor(terminal, profile.protocol),
+    [terminal, profile.protocol],
+  );
+  const terminalProtocols = terminal.protocols as readonly ProviderType[];
   const profileKey = JSON.stringify(profile);
   const status = profiles.data?.find((item) => item.client === client);
   const providerRows = providers.data ?? EMPTY_PROVIDERS;
@@ -80,8 +88,8 @@ export function TerminalPage() {
   const directProfile = directDraft ?? initialDirect;
   const accessMode = modes[client] ?? (status?.active_mode === "direct" ? "direct" : "proxy");
   const compatible = useMemo(
-    () => compatibleProviders(providerRows, terminal.protocol),
-    [providerRows, terminal.protocol],
+    () => compatibleProviders(providerRows, protocol),
+    [providerRows, protocol],
   );
   const available = useMemo(() => availableSelectionKeys(compatible), [compatible]);
   const stale = profile.models.filter((model) => !available.has(selectionKey(model)));
@@ -137,7 +145,12 @@ export function TerminalPage() {
   }
 
   function update(models: TerminalSelection[], defaultModel = profile.default_model) {
-    setDraft(buildProfile(client, models, defaultModel));
+    setDraft(buildProfile(client, models, defaultModel, draftProtocol(terminal, profile.protocol)));
+    setFeedback(null);
+  }
+
+  function chooseProtocol(next: ProviderType) {
+    setDraft({ ...profile, protocol: draftProtocol(terminal, next) });
     setFeedback(null);
   }
 
@@ -236,7 +249,53 @@ export function TerminalPage() {
           <div className="terminal-client-heading">
             <span className="terminal-client-eyebrow">{t("terminal.header.eyebrow")}</span>
             <h1>{terminal.name}</h1>
-            <p>{PROTOCOLS_BY_ID[terminal.protocol].name}</p>
+            {terminalProtocols.length > 1 ? (
+              <div
+                className="terminal-protocol-switch"
+                role="radiogroup"
+                aria-label={t("terminal.header.protocol")}
+                onKeyDown={(event) => {
+                  if (busy || !ready || !["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return;
+                  event.preventDefault();
+                  const index = terminalProtocols.indexOf(protocol);
+                  const next =
+                    event.key === "Home"
+                      ? 0
+                      : event.key === "End"
+                        ? terminalProtocols.length - 1
+                        : event.key === "ArrowLeft"
+                          ? (index - 1 + terminalProtocols.length) % terminalProtocols.length
+                          : (index + 1) % terminalProtocols.length;
+                  chooseProtocol(terminalProtocols[next]);
+                  document.getElementById(`terminal-protocol-${terminalProtocols[next]}`)?.focus();
+                }}
+              >
+                {terminalProtocols.map((id) => (
+                  <button
+                    key={id}
+                    id={`terminal-protocol-${id}`}
+                    type="button"
+                    role="radio"
+                    aria-checked={protocol === id}
+                    className={protocol === id ? "selected" : ""}
+                    title={PROTOCOLS_BY_ID[id].name}
+                    aria-label={PROTOCOLS_BY_ID[id].name}
+                    disabled={busy || !ready}
+                    onClick={() => chooseProtocol(id)}
+                  >
+                    <ProviderIcon brand={PROTOCOLS_BY_ID[id].brand} size={14} />
+                    <span>{PROTOCOLS_BY_ID[id].shortName}</span>
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <div className="terminal-protocol-switch">
+                <span className="terminal-protocol-chip" title={PROTOCOLS_BY_ID[protocol].name}>
+                  <ProviderIcon brand={PROTOCOLS_BY_ID[protocol].brand} size={14} />
+                  <span>{PROTOCOLS_BY_ID[protocol].shortName}</span>
+                </span>
+              </div>
+            )}
           </div>
         </div>
         <div className={`terminal-header-status ${status?.active ? "connected" : "disconnected"}`}>
@@ -403,7 +462,7 @@ export function TerminalPage() {
                           key={provider.id}
                           provider={provider}
                           client={client}
-                          protocol={terminal.protocol}
+                          protocol={protocol}
                           query={query}
                           open={
                             Boolean(query) ||
@@ -572,7 +631,7 @@ function ProviderGroup({
 }: {
   provider: ProviderView;
   client: TerminalClient;
-  protocol: (typeof TERMINALS)[number]["protocol"];
+  protocol: ProviderType;
   query: string;
   open: boolean;
   checkedCount: number;
@@ -634,7 +693,7 @@ function ProviderGroup({
                 capabilities={model.capabilities}
                 client={protocol}
                 upstream={provider.provider_type}
-                inputFilter={client === "codex" ? ["text", "image"] : undefined}
+                inputFilter={client === "codex" || client === "pi" ? ["text", "image"] : undefined}
               />
             </span>
             {defaultModel === model.route_id && <em>{t("terminal.models.defaultBadge")}</em>}

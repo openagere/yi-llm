@@ -3,6 +3,7 @@ const terminal = {
   terminal: {
     header: {
       eyebrow: "终端管理",
+      protocol: "接入协议",
     },
     modeTabs: {
       label: "终端接入方式",

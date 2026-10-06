@@ -160,12 +160,12 @@ impl Capabilities {
         if self.effort.support == Support::Unsupported {
             return Err("该模型不支持设置 Effort".into());
         }
-        if !self
-            .efforts_for(client, upstream)
-            .iter()
-            .any(|level| level == effort)
-        {
-            return Err("请求的 Effort 档位不被模型或协议转换支持".into());
+        let supported = self.efforts_for(client, upstream);
+        if !supported.iter().any(|level| level == effort) {
+            return Err(format!(
+                "请求的 Effort 档位「{effort}」不被模型或协议转换支持（可用：{}）",
+                supported.join("/")
+            ));
         }
         Ok(())
     }

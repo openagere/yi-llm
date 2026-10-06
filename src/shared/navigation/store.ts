@@ -2,13 +2,27 @@ import { create } from "zustand";
 import { dismissNotification } from "../notify";
 
 /** 应用页面标识与导航类型定义。 */
-export type Page = "provider-list" | "provider-editor" | "model-list" | "model-editor" | "proxy" | "usage" | "terminal-codex" | "terminal-claude-code" | "terminal-opencode" | "settings";
+export type Page =
+  | "provider-list"
+  | "provider-editor"
+  | "model-list"
+  | "model-editor"
+  | "proxy"
+  | "usage"
+  | "terminal-codex"
+  | "terminal-claude-code"
+  | "terminal-opencode"
+  | "terminal-pi"
+  | "terminal-deepseek-harness"
+  | "settings";
 
 /** 终端子页面与客户端的对应关系；侧边栏终端分组按此展开。 */
 export const TERMINAL_PAGE_CLIENTS = {
   "terminal-codex": "codex",
   "terminal-claude-code": "claude-code",
   "terminal-opencode": "opencode",
+  "terminal-pi": "pi",
+  "terminal-deepseek-harness": "deepseek-harness",
 } as const;
 export type TerminalPageId = keyof typeof TERMINAL_PAGE_CLIENTS;
 export type MainPage = Exclude<Page, "provider-editor" | "model-editor">;
@@ -59,7 +73,10 @@ export const useNavigationStore = create<NavigationState>((set, get) => ({
   guarded: (action) => {
     const { busy, dirty, pendingDiscard } = get();
     if (busy || pendingDiscard) return;
-    if (dirty) { set({ pendingDiscard: action }); return; }
+    if (dirty) {
+      set({ pendingDiscard: action });
+      return;
+    }
     action();
   },
 
@@ -85,9 +102,19 @@ export const useNavigationStore = create<NavigationState>((set, get) => ({
   back: () => {
     get().guarded(() => {
       const { page, history } = get();
-      if (page === "provider-editor") { set({ dirty: false, page: "provider-list" }); return; }
-      if (page === "model-editor") { set({ dirty: false, page: "model-list" }); return; }
-      set({ dirty: false, page: history[history.length - 1] ?? "provider-list", history: history.slice(0, -1) });
+      if (page === "provider-editor") {
+        set({ dirty: false, page: "provider-list" });
+        return;
+      }
+      if (page === "model-editor") {
+        set({ dirty: false, page: "model-list" });
+        return;
+      }
+      set({
+        dirty: false,
+        page: history[history.length - 1] ?? "provider-list",
+        history: history.slice(0, -1),
+      });
     });
   },
 

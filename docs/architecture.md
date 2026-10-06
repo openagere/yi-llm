@@ -17,7 +17,7 @@ yi-llm 由 Tauri（Rust 后端）和 React（前端）组成。后端提供本�
 | `commands/` | 薄适配层：解析参数、调用 service、返回 `Result<T, AppError>`。 |
 | `proxy/` | axum 路由、请求管线、监控、日志、生命周期状态机；路由表通过 `arc-swap` 缓存，每次请求无锁读取。 |
 | `protocol/` | 协议模型与转换（Responses / Chat Completions / Anthropic Messages），`UpstreamClient` trait 隔离真实 HTTP。 |
-| `terminal/` | 终端客户端（Codex、Claude Code、OpenCode）配置生成与应用，`ClientConfigurator` trait，应用失败时回滚。 |
+| `terminal/` | 终端客户端（Codex、Claude Code、OpenCode、Pi、DeepSeek Harness，OpenCode / Pi / DeepSeek Harness 可先选接入协议）配置生成与应用，`ClientConfigurator` trait，应用失败时回滚。 |
 | `app/` | 启动装配、日志、旧版数据迁移、`AppState`。 |
 
 集成测试位于 `src-tauri/tests/`（`common/mod.rs` 提供公共夹具，`proxy_*.rs` 按主题拆分，使用 wiremock 模拟上游）。

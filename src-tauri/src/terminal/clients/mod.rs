@@ -1,6 +1,8 @@
 mod claude_code;
 mod codex;
+mod deepseek_harness;
 mod opencode;
+mod pi;
 
 use crate::{
     domain::{
@@ -42,8 +44,9 @@ pub struct Built {
 /// implementation and one arm in [`configurator`].
 pub trait ClientConfigurator: Sync {
     fn config_path(&self) -> Result<PathBuf>;
-    /// Whether `source` (the current config file content) already points at `endpoint`.
-    fn is_active(&self, path: &Path, source: &str, endpoint: &str) -> Result<bool>;
+    /// Whether `source` (the current config file content) already points at `endpoint`
+    /// for the selected client protocol.
+    fn is_active(&self, path: &Path, source: &str, endpoint: &str, protocol: &str) -> Result<bool>;
     fn build(&self, input: &PlanInput<'_>, path: &Path, source: &str) -> Result<Built>;
     fn build_direct(&self, input: &DirectPlanInput<'_>, path: &Path, source: &str)
         -> Result<Built>;
@@ -57,6 +60,10 @@ pub trait ClientConfigurator: Sync {
     ) -> Result<bool>;
     /// The main config reduced to the settings yi owns, safe to show to the user.
     fn owned_preview(&self, content: &[u8]) -> Result<String>;
+    /// Preview for a side file this client owns; `None` falls back to the raw content.
+    fn extra_preview(&self, _path: &Path, _content: &[u8]) -> Result<Option<String>> {
+        Ok(None)
+    }
 }
 
 pub fn redact_endpoint(value: &str) -> String {
@@ -118,6 +125,8 @@ pub fn configurator(client: &str) -> Result<&'static dyn ClientConfigurator> {
         "codex" => Ok(&codex::Codex),
         "claude-code" => Ok(&claude_code::ClaudeCode),
         "opencode" => Ok(&opencode::OpenCode),
+        "pi" => Ok(&pi::Pi),
+        "deepseek-harness" => Ok(&deepseek_harness::DeepSeekHarness),
         _ => Err(AppError::validation("未知终端类型")),
     }
 }

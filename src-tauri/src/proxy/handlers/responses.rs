@@ -33,3 +33,34 @@ pub async fn codex_responses(
 ) -> Response {
     handle(state, body, PROTOCOL, Some("codex".into()), headers).await
 }
+
+pub async fn pi_responses(
+    State(state): State<AppState>,
+    headers: HeaderMap,
+    Json(body): Json<Value>,
+) -> Response {
+    handle(state, body, PROTOCOL, Some("pi".into()), headers).await
+}
+
+pub async fn opencode_responses(
+    State(state): State<AppState>,
+    headers: HeaderMap,
+    Json(body): Json<Value>,
+) -> Response {
+    handle(state, body, PROTOCOL, Some("opencode".into()), headers).await
+}
+
+pub async fn deepseek_harness_responses(
+    State(state): State<AppState>,
+    headers: HeaderMap,
+    Json(body): Json<Value>,
+) -> Response {
+    handle(
+        state,
+        body,
+        PROTOCOL,
+        Some("deepseek-harness".into()),
+        headers,
+    )
+    .await
+}

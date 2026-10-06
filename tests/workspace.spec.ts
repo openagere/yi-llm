@@ -413,10 +413,59 @@ test("terminal child pages keep pending drafts while switching clients", async (
   await expect(page.locator(".terminal-direct-models-panel")).toBeVisible();
   await expect(page.getByRole("radiogroup", { name: "模型来源" })).toHaveCount(0);
 
+  await page.locator(".sidebar").getByRole("button", { name: "Pi", exact: true }).click();
+  await expect(page.locator("h1:visible")).toHaveText("Pi");
+  await page.getByRole("tab", { name: "直连接入" }).click();
+  await expect(page.locator(".terminal-direct-models-panel")).toBeVisible();
+  await expect(page.getByRole("radiogroup", { name: "模型来源" })).toHaveCount(0);
+
   await page.locator(".sidebar").getByRole("button", { name: "Codex CLI", exact: true }).click();
   await expect(page.getByRole("radio", { name: /使用 Provider 模型/ })).toBeChecked();
   await page.locator(".sidebar").getByRole("button", { name: "设置", exact: true }).click();
   await expect(page.getByRole("dialog")).toBeVisible();
+});
+
+test("terminal protocol chips drive the proxy for single- and multi-protocol clients", async ({ page }, testInfo) => {
+  await installBackend(page, "dark");
+  await page.goto("/");
+  const terminalGroup = page.locator(".sidebar").getByRole("button", { name: "终端管理", exact: true });
+  if (await terminalGroup.getAttribute("aria-expanded") !== "true") await terminalGroup.click();
+  await page.locator(".sidebar").getByRole("button", { name: "Codex CLI", exact: true }).click();
+  const codexProtocol = page.locator(".terminal-client-heading .terminal-protocol-switch");
+  await expect(codexProtocol).toContainText("Responses");
+  await expect(codexProtocol.getByRole("radio")).toHaveCount(0);
+  await expect(codexProtocol.locator(".terminal-protocol-chip")).toHaveCount(1);
+  await page.screenshot({ path: testInfo.outputPath("terminal-codex-protocol.png") });
+
+  // OpenCode offers the same three-way choice; the model set follows the selected protocol.
+  await page.locator(".sidebar").getByRole("button", { name: "OpenCode", exact: true }).click();
+  const opencodeProtocol = page.locator(".terminal-client-heading").getByRole("radiogroup", { name: "接入协议" });
+  await expect(opencodeProtocol.getByRole("radio")).toHaveCount(3);
+  await expect(opencodeProtocol.getByRole("radio", { name: "OpenAI Chat Completions" })).toHaveAttribute("aria-checked", "true");
+  await expect(page.locator(".terminal-provider-disclosure")).toHaveCount(3);
+  await opencodeProtocol.getByRole("radio", { name: "Responses API" }).click();
+  await expect(opencodeProtocol.getByRole("radio", { name: "Responses API" })).toHaveAttribute("aria-checked", "true");
+  await expect(page.locator(".terminal-provider-disclosure")).toHaveCount(2);
+  await expect(page.locator(".terminal-provider-disclosure").first()).toContainText("OpenAI");
+  await expect(page.getByRole("tab", { name: "代理接入" }).locator(".terminal-mode-state.pending")).toBeVisible();
+
+  await page.locator(".sidebar").getByRole("button", { name: "Pi", exact: true }).click();
+  await expect(page.locator("h1:visible")).toHaveText("Pi");
+  const protocol = page.locator(".terminal-client-heading").getByRole("radiogroup", { name: "接入协议" });
+  const chat = protocol.getByRole("radio", { name: "OpenAI Chat Completions" });
+  await expect(protocol.getByRole("radio")).toHaveCount(3);
+  await expect(chat).toHaveAttribute("aria-checked", "true");
+  await expect(page.locator(".terminal-provider-disclosure")).toHaveCount(3);
+  await protocol.getByRole("radio", { name: "Anthropic Messages" }).click();
+  await expect(protocol.getByRole("radio", { name: "Anthropic Messages" })).toHaveAttribute("aria-checked", "true");
+  await expect(chat).toHaveAttribute("aria-checked", "false");
+  await expect(page.locator(".terminal-provider-disclosure")).toHaveCount(1);
+  await expect(page.locator(".terminal-provider-disclosure")).toContainText("Anthropic");
+  await expect(page.getByRole("tab", { name: "代理接入" }).locator(".terminal-mode-state.pending")).toBeVisible();
+  await page.screenshot({ path: testInfo.outputPath("terminal-pi-protocol.png") });
+  await page.getByRole("tab", { name: "直连接入" }).click();
+  await expect(protocol).toBeVisible();
+  await expect(protocol.getByRole("radio", { name: "Anthropic Messages" })).toHaveAttribute("aria-checked", "true");
 });
 
 test("leaving an unchanged terminal does not warn about another terminal's draft", async ({ page }) => {

@@ -2,7 +2,7 @@ use crate::{
     domain::{
         capabilities::Modality,
         provider::{ModelMapping, Provider},
-        terminal::{protocol, Profile, Selection},
+        terminal::{selected_protocol, Profile, Selection},
     },
     error::{AppError, Result},
     proxy::routing::{ResolvedRoute, RouteTable},
@@ -72,7 +72,7 @@ fn selected_route(
 }
 
 pub fn validate_in(table: &RouteTable, profile: &Profile) -> Result<Vec<ResolvedModel>> {
-    let protocol = protocol(&profile.client)?;
+    let protocol = selected_protocol(&profile.client, profile.protocol.as_deref())?;
     if profile.models.is_empty() {
         return Err("请至少选择一个模型".into());
     }
@@ -124,10 +124,10 @@ pub fn resolve_in(
     model: &str,
     requested_protocol: &str,
 ) -> Result<ResolvedModel> {
-    if protocol(client)? != requested_protocol {
+    let profile = table.profile(client).ok_or("该终端尚未配置模型集合")?;
+    if selected_protocol(client, profile.protocol.as_deref())? != requested_protocol {
         return Err("该终端入口不支持请求的协议".into());
     }
-    let profile = table.profile(client).ok_or("该终端尚未配置模型集合")?;
     let mut selections = profile.models.iter().filter(|m| m.model == model);
     let selection = selections.next().ok_or("该模型不在终端的模型集合中")?;
     if selections.next().is_some() {
@@ -137,8 +137,8 @@ pub fn resolve_in(
 }
 
 pub fn model_list_in(table: &RouteTable, client: &str) -> Result<Value> {
-    let protocol = protocol(client)?;
     let profile = table.profile(client).ok_or("该终端尚未配置模型集合")?;
+    let protocol = selected_protocol(client, profile.protocol.as_deref())?;
     let data: Vec<_> = profile
         .models
         .iter()

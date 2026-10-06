@@ -18,6 +18,13 @@ pub fn router(state: AppState) -> Router {
     // including its unversioned alias; model and protocol validation still run.
     let codex_response_handler =
         post(responses::codex_responses).layer(DefaultBodyLimit::disable());
+    // Pi, OpenCode and DeepSeek Harness Responses clients send the same agent-sized
+    // histories as Codex.
+    let pi_response_handler = post(responses::pi_responses).layer(DefaultBodyLimit::disable());
+    let opencode_response_handler =
+        post(responses::opencode_responses).layer(DefaultBodyLimit::disable());
+    let deepseek_response_handler =
+        post(responses::deepseek_harness_responses).layer(DefaultBodyLimit::disable());
     tracing::info!(
         version = env!("CARGO_PKG_VERSION"),
         codex_responses_body_limit = "unlimited",
@@ -36,6 +43,17 @@ pub fn router(state: AppState) -> Router {
             codex_response_handler.clone(),
         )
         .route("/clients/codex/responses", codex_response_handler)
+        .route("/clients/pi/v1/responses", pi_response_handler.clone())
+        .route("/clients/pi/responses", pi_response_handler)
+        .route("/clients/opencode/v1/responses", opencode_response_handler)
+        .route(
+            "/clients/deepseek-harness/v1/responses",
+            deepseek_response_handler.clone(),
+        )
+        .route(
+            "/clients/deepseek-harness/responses",
+            deepseek_response_handler,
+        )
         .route(
             "/clients/{client}/v1/responses",
             post(responses::client_responses),
@@ -100,11 +118,11 @@ mod body_limit_tests {
         .into()
     }
 
-    async fn assert_codex_body_accepted(mebibytes: usize, chunked: bool) {
+    async fn assert_body_accepted(endpoints: &[&str], mebibytes: usize, chunked: bool) {
         let proxy = start_proxy().await;
         let body = large_body(mebibytes);
         let client = reqwest::Client::new();
-        for endpoint in ["/clients/codex/v1/responses", "/clients/codex/responses"] {
+        for endpoint in endpoints {
             let request_body = if chunked {
                 let chunks = (0..body.len())
                     .step_by(64 * 1024)
@@ -138,17 +156,42 @@ mod body_limit_tests {
 
     #[tokio::test]
     async fn codex_responses_aliases_accept_bodies_above_default_limit() {
-        assert_codex_body_accepted(3, false).await;
+        assert_body_accepted(
+            &["/clients/codex/v1/responses", "/clients/codex/responses"],
+            3,
+            false,
+        )
+        .await;
     }
 
     #[tokio::test]
     async fn codex_responses_accept_bodies_above_previous_64_mib_limit() {
-        assert_codex_body_accepted(65, false).await;
+        assert_body_accepted(
+            &["/clients/codex/v1/responses", "/clients/codex/responses"],
+            65,
+            false,
+        )
+        .await;
     }
 
     #[tokio::test]
     async fn codex_responses_accept_large_chunked_bodies_without_content_length() {
-        assert_codex_body_accepted(65, true).await;
+        assert_body_accepted(
+            &["/clients/codex/v1/responses", "/clients/codex/responses"],
+            65,
+            true,
+        )
+        .await;
+    }
+
+    #[tokio::test]
+    async fn pi_responses_accept_bodies_above_default_limit() {
+        assert_body_accepted(
+            &["/clients/pi/v1/responses", "/clients/pi/responses"],
+            3,
+            false,
+        )
+        .await;
     }
 
     #[tokio::test]
@@ -164,11 +207,12 @@ mod body_limit_tests {
             "/responses",
             "/v1/messages",
             "/v1/chat/completions",
-            "/clients/opencode/v1/responses",
             "/clients/opencode/responses",
             "/clients/claude-code/v1/responses",
             "/clients/codex/v1/messages",
             "/clients/codex/v1/chat/completions",
+            "/clients/pi/v1/chat/completions",
+            "/clients/pi/v1/messages",
         ] {
             let response = client
                 .post(format!("{}{endpoint}", proxy.root))
@@ -185,11 +229,10 @@ mod body_limit_tests {
         }
     }
 
-    #[tokio::test]
-    async fn codex_responses_still_reject_invalid_json_and_missing_models() {
+    async fn assert_rejects_invalid_requests(endpoints: &[&str]) {
         let proxy = start_proxy().await;
         let client = reqwest::Client::new();
-        for endpoint in ["/clients/codex/v1/responses", "/clients/codex/responses"] {
+        for endpoint in endpoints {
             for body in ["{", r#"{"input":"hello"}"#] {
                 let response = client
                     .post(format!("{}{endpoint}", proxy.root))
@@ -201,5 +244,30 @@ mod body_limit_tests {
                 assert_eq!(response.status(), StatusCode::BAD_REQUEST, "{endpoint}");
             }
         }
+    }
+
+    #[tokio::test]
+    async fn codex_responses_still_reject_invalid_json_and_missing_models() {
+        assert_rejects_invalid_requests(&[
+            "/clients/codex/v1/responses",
+            "/clients/codex/responses",
+        ])
+        .await;
+    }
+
+    #[tokio::test]
+    async fn pi_responses_still_reject_invalid_json_and_missing_models() {
+        assert_rejects_invalid_requests(&["/clients/pi/v1/responses", "/clients/pi/responses"])
+            .await;
+    }
+
+    #[tokio::test]
+    async fn opencode_responses_accept_bodies_above_default_limit() {
+        assert_body_accepted(&["/clients/opencode/v1/responses"], 3, false).await;
+    }
+
+    #[tokio::test]
+    async fn opencode_responses_still_reject_invalid_json_and_missing_models() {
+        assert_rejects_invalid_requests(&["/clients/opencode/v1/responses"]).await;
     }
 }

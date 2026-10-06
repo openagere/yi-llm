@@ -190,6 +190,7 @@ async fn claude_terminal_thinking_and_effort_work_across_all_upstreams() {
             client: "claude-code".into(),
             models: vec![Selection { provider_id: "primary".into(), model: "public-model".into() }],
             default_model: "public-model".into(),
+            protocol: None,
         }).unwrap();
         let client = reqwest::Client::new();
         let endpoint = format!("{proxy}/clients/claude-code/v1/messages");
