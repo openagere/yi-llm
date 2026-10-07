@@ -2,7 +2,7 @@
   "name": "yi-llm",
   "description": "Local multi-protocol LLM gateway and management desktop app (Tauri + React).",
   "private": true,
-  "version": "0.1.1",
+  "version": "0.1.2",
   "license": "MIT",
   "type": "module",
   "scripts": {

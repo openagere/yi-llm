@@ -3,6 +3,7 @@ import { Copy, Minus, Moon, PanelLeft, Square, Sun, X } from "lucide-react";
 import { isTauri } from "@tauri-apps/api/core";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { useI18n } from "@/shared/i18n";
+import { detectPlatform } from "@/shared/lib";
 import { useNavigationStore } from "@/shared/navigation";
 import { notify } from "@/shared/notify";
 import { useSettings } from "@/shared/settings";
@@ -16,6 +17,8 @@ export function WorkspaceToolbar() {
   const toggleSidebar = useNavigationStore((state) => state.toggleSidebar);
   const guarded = useNavigationStore((state) => state.guarded);
   const native = isTauri();
+  // macOS 使用系统装饰窗口（Overlay 标题栏），窗口控制由原生红绿灯按钮提供，无需自绘。
+  const systemTitlebar = native && detectPlatform() === "macos";
   const [maximized, setMaximized] = useState(false);
   const title = t("nav.workspace");
   useEffect(() => {
@@ -24,13 +27,13 @@ export function WorkspaceToolbar() {
   }, [native, title]);
 
   useEffect(() => {
-    if (!native) return;
+    if (!native || systemTitlebar) return;
     let active = true;
     const sync = () => { void getCurrentWindow().isMaximized().then(value => { if (active) setMaximized(value); }).catch(() => {}); };
     sync();
     window.addEventListener("resize", sync);
     return () => { active = false; window.removeEventListener("resize", sync); };
-  }, [native]);
+  }, [native, systemTitlebar]);
 
   async function control(action: "minimize" | "maximize" | "drag") {
     if (!native) return;
@@ -58,7 +61,7 @@ export function WorkspaceToolbar() {
     <div className="titlebar-caption" data-titlebar-drag-region />
     <div className="titlebar-actions" data-window-interactive>
       <button type="button" className="icon-button theme-toggle" title={t("nav.toggleTheme")} aria-label={t("nav.toggleTheme")} onClick={() => update("theme", document.documentElement.dataset.theme === "dark" ? "light" : "dark")}><Moon className="theme-icon-dark" size={15} /><Sun className="theme-icon-light" size={15} /></button>
-      {native && <div className="window-controls">
+      {native && !systemTitlebar && <div className="window-controls">
         <button type="button" className="window-control" title={t("window.minimize")} aria-label={t("window.minimize")} onClick={() => void control("minimize")}><Minus size={14} strokeWidth={1.4} /></button>
         <button type="button" className="window-control" title={t(maximized ? "window.restore" : "window.maximize")} aria-label={t(maximized ? "window.restore" : "window.maximize")} onClick={() => void control("maximize")}>{maximized ? <Copy size={12} strokeWidth={1.4} /> : <Square size={12} strokeWidth={1.4} />}</button>
         <button type="button" className="window-control window-control-close" title={t("window.close")} aria-label={t("window.close")} disabled={disabled} onClick={closeWindow}><X size={15} strokeWidth={1.4} /></button>
