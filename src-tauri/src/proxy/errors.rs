@@ -78,10 +78,17 @@ pub fn protocol_error(protocol: &str, status: StatusCode, message: &str) -> Resp
 
 pub fn upstream_status(message: &str) -> StatusCode {
     if message.contains("上游请求超时") {
-        StatusCode::GATEWAY_TIMEOUT
-    } else {
-        StatusCode::BAD_GATEWAY
+        return StatusCode::GATEWAY_TIMEOUT;
     }
+    // Upstream clients report rejected requests as "上游返回 {status}: {body}". Keep a 4xx
+    // so the caller sees a client error and does not retry a request that cannot succeed.
+    let rejected = message
+        .strip_prefix("上游返回 ")
+        .and_then(|rest| rest.split_whitespace().next())
+        .and_then(|code| code.parse::<u16>().ok())
+        .and_then(|code| StatusCode::from_u16(code).ok())
+        .filter(|status| status.is_client_error());
+    rejected.unwrap_or(StatusCode::BAD_GATEWAY)
 }
 
 #[cfg(test)]
@@ -95,6 +102,18 @@ mod tests {
             StatusCode::GATEWAY_TIMEOUT
         );
         assert_eq!(upstream_status("连接上游失败"), StatusCode::BAD_GATEWAY);
+    }
+
+    #[test]
+    fn upstream_client_errors_keep_their_status() {
+        assert_eq!(
+            upstream_status("上游返回 400 Bad Request: {\"error\":{}}"),
+            StatusCode::BAD_REQUEST
+        );
+        assert_eq!(
+            upstream_status("上游返回 500 Internal Server Error: x"),
+            StatusCode::BAD_GATEWAY
+        );
         assert_eq!(
             ProxyError::upstream("上游请求超时").status,
             StatusCode::GATEWAY_TIMEOUT

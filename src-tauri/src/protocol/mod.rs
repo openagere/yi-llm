@@ -3,5 +3,6 @@ pub mod compatibility;
 pub mod prepare;
 pub mod respond;
 pub mod responses;
+pub mod schema;
 pub mod translate;
 pub mod upstream;

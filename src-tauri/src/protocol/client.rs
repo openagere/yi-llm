@@ -1,4 +1,5 @@
 use crate::protocol::responses::types::ResponsesRequest;
+use crate::protocol::schema::sanitize_tool_schema;
 use serde_json::{json, Value};
 use std::collections::HashMap;
 
@@ -544,12 +545,16 @@ fn normalize_responses(body: &Value) -> Result<Value, String> {
             for (tool_index, nested_tool) in nested.iter().enumerate() {
                 let definition = nested_tool.get("function").unwrap_or(nested_tool);
                 let internal_name = format!("__yi_llm_namespace_{namespace_index}_{tool_index}");
-                flattened.push(json!({
-                    "type":"function",
-                    "name":internal_name,
-                    "description":definition.get("description"),
-                    "parameters":definition.get("inputSchema").or_else(|| definition.get("parameters")).cloned().unwrap_or_else(|| json!({"type":"object"})),
-                }));
+                let parameters = definition
+                    .get("inputSchema")
+                    .or_else(|| definition.get("parameters"))
+                    .cloned()
+                    .unwrap_or_else(|| json!({"type":"object"}));
+                flattened.push(responses_function_tool(
+                    &internal_name,
+                    definition.get("description"),
+                    &parameters,
+                ));
             }
         }
         *tools = flattened;
@@ -721,12 +726,15 @@ fn normalize_chat(body: &Value) -> Result<Value, String> {
                 .get("name")
                 .and_then(Value::as_str)
                 .ok_or_else(|| format!("tools[{index}] 缺少函数名称"))?;
-            normalized.push(json!({
-                "type":"function",
-                "name":name,
-                "description":function.get("description"),
-                "parameters":function.get("parameters").cloned().unwrap_or_else(|| json!({"type":"object"})),
-            }));
+            let parameters = function
+                .get("parameters")
+                .cloned()
+                .unwrap_or_else(|| json!({"type":"object"}));
+            normalized.push(responses_function_tool(
+                name,
+                function.get("description"),
+                &parameters,
+            ));
         }
         out["tools"] = Value::Array(normalized);
     }
@@ -917,12 +925,15 @@ fn normalize_anthropic(body: &Value) -> Result<Value, String> {
                 .get("name")
                 .and_then(Value::as_str)
                 .ok_or_else(|| format!("tools[{index}] 缺少函数名称，内置工具不支持协议转换"))?;
-            normalized.push(json!({
-                "type":"function",
-                "name":name,
-                "description":tool.get("description"),
-                "parameters":tool.get("input_schema").cloned().unwrap_or_else(|| json!({"type":"object"})),
-            }));
+            let parameters = tool
+                .get("input_schema")
+                .cloned()
+                .unwrap_or_else(|| json!({"type":"object"}));
+            normalized.push(responses_function_tool(
+                name,
+                tool.get("description"),
+                &parameters,
+            ));
         }
         out["tools"] = Value::Array(normalized);
     }
@@ -967,6 +978,20 @@ fn normalize_anthropic(body: &Value) -> Result<Value, String> {
         }
     }
     Ok(out)
+}
+
+/// Builds a Responses `function` tool. Absent or null descriptions are omitted, and the
+/// schema is normalized so OpenAI-compatible upstreams accept it.
+fn responses_function_tool(name: &str, description: Option<&Value>, parameters: &Value) -> Value {
+    let mut tool = json!({
+        "type":"function",
+        "name":name,
+        "parameters":sanitize_tool_schema(parameters),
+    });
+    if let Some(description) = description.filter(|value| !value.is_null()) {
+        tool["description"] = description.clone();
+    }
+    tool
 }
 
 fn anthropic_instruction_text(content: &Value, path: &str) -> Result<String, String> {
@@ -1318,6 +1343,44 @@ mod tests {
         )
         .unwrap();
         assert!(validate_for_upstream("anthropic", &body).is_ok());
+    }
+
+    #[test]
+    fn anthropic_tool_schema_is_sanitized_for_responses_upstream() {
+        let body = normalize_body(
+            "anthropic",
+            &json!({
+                "model": "gpt-5",
+                "messages": [{"role": "user", "content": "hi"}],
+                "tools": [{
+                    "name": "search",
+                    "description": null,
+                    "input_schema": {
+                        "$schema": "http://json-schema.org/draft-07/schema#",
+                        "type": "object",
+                        "properties": {
+                            "query": {"type": ["string", "null"]},
+                            "filter": {"$ref": "#/$defs/Filter"}
+                        },
+                        "required": ["query", "missing"],
+                        "$defs": {"Filter": {"type": "string"}}
+                    }
+                }],
+            }),
+        )
+        .unwrap();
+        let tool = &body["tools"][0];
+        assert!(tool.get("description").is_none());
+        assert!(tool["parameters"].get("$schema").is_none());
+        assert_eq!(
+            tool["parameters"]["properties"]["query"],
+            json!({"type": "string"})
+        );
+        assert_eq!(
+            tool["parameters"]["properties"]["filter"],
+            json!({"type": "string"})
+        );
+        assert_eq!(tool["parameters"]["required"], json!(["query"]));
     }
 
     #[test]
