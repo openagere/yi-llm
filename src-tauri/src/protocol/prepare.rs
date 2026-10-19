@@ -2,6 +2,7 @@ use crate::domain::{
     capabilities::{effort_levels, Capabilities, Modality, Support},
     provider::Provider,
 };
+use crate::protocol::upstream::openai_chat::types::express_developer_messages_as_system;
 use serde_json::{json, Value};
 use std::collections::HashSet;
 
@@ -169,6 +170,12 @@ pub fn prepare_request(
     capabilities: &Capabilities,
 ) -> Result<(), String> {
     provider.thinking.clear();
+    // A same-protocol Chat Completions forward hands the client body over as-is.
+    // Codex sends its instructions as a `developer` message, which most
+    // OpenAI-compatible upstreams reject, so express it under `system` first.
+    if protocol == "openai_chat" {
+        express_developer_messages_as_system(body);
+    }
     if let Some(allowed) = &capabilities.input_modalities {
         let mut requested = HashSet::new();
         let input = body.get(if protocol == "responses" {
@@ -564,5 +571,25 @@ mod tests {
         prepare_request(&mut body, "anthropic", &mut provider("anthropic"), &value).unwrap();
         assert!(body.pointer("/output_config/effort").is_none());
         assert_eq!(body["thinking"]["budget_tokens"], 512);
+    }
+    #[test]
+    fn chat_developer_messages_are_prepared_as_system() {
+        let mut body = json!({"messages":[
+            {"role":"developer","content":"You are a coding assistant."},
+            {"role":"user","content":"hi"}
+        ]});
+        prepare_request(
+            &mut body,
+            "openai_chat",
+            &mut provider("openai_chat"),
+            &Capabilities::default(),
+        )
+        .unwrap();
+        assert_eq!(body["messages"][0]["role"], "system");
+        assert_eq!(
+            body["messages"][0]["content"],
+            "You are a coding assistant."
+        );
+        assert_eq!(body["messages"][1]["role"], "user");
     }
 }

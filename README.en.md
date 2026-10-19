@@ -139,6 +139,8 @@ Codex uses the native `model_catalog_json` catalog so `/model` lists the selecte
 ## Protocol Capabilities & Limits
 
 - Cross-protocol conversion covers text conversations, image input (Anthropic upstreams require a base64 data URL), function tools and results, Responses namespace tools (flattened upstream, restored in Responses output), custom text tools, reasoning text, token limits and JSON Schema structured output (`text.format` → Anthropic `output_config.format` / Chat `response_format`).
+- Role normalization: `developer` instruction messages sent by Codex are expressed as `system` for Chat Completions upstreams, most of which implement only the classic role set; the instruction text is unchanged.
+- Field completion: assistant messages that carry only `tool_calls` explicitly send `content: ""`, which strict upstreams such as Qwen / DashScope compatible mode require (matching the OpenAI examples).
 - Thinking signatures / reasoning payloads are preserved across turns: Anthropic `signature_delta` and `redacted_thinking` surface as reasoning-item `encrypted_content` and are echoed back on the next request; Chat Completions `reasoning_content` is replayed on assistant messages and mapped to reasoning output.
 - Reasoning effort: `default`/`off` effort levels are settled before validation: the model's configured default level (falling back to its lowest supported level), and no reasoning option at all respectively; models without effort support simply omit the field.
 - Prompt-cache usage is reported through `input_tokens_details.cached_tokens`.

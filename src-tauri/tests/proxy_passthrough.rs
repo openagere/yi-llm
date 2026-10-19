@@ -282,3 +282,56 @@ async fn non_standard_model_adapts_native_and_codex_requests_without_changing_st
     assert_eq!(after["include"][0], "reasoning.encrypted_content");
     assert_eq!(after["input"], "hello");
 }
+
+#[tokio::test]
+async fn chat_developer_message_is_forwarded_to_chat_upstream_as_system() {
+    let upstream = MockServer::start().await;
+    let fixture = concat!(
+        "data: {\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"ok\"}}],\"usage\":null}\n\n",
+        "data: {\"choices\":[{\"index\":0,\"delta\":{},\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":3,\"completion_tokens\":1,\"total_tokens\":4}}\n\n",
+        "data: [DONE]\n\n"
+    );
+    // Native Chat Completions forwarding still expresses Codex instructions the
+    // classic way: upstreams that only know the classic role set must not see
+    // `developer`.
+    Mock::given(method("POST"))
+        .and(path("/chat/completions"))
+        .and(body_string_contains("\"developer\""))
+        .respond_with(ResponseTemplate::new(400))
+        .mount(&upstream)
+        .await;
+    Mock::given(method("POST"))
+        .and(path("/chat/completions"))
+        .and(body_string_contains("\"role\":\"system\""))
+        .respond_with(
+            ResponseTemplate::new(200)
+                .insert_header("content-type", "text/event-stream")
+                .set_body_string(fixture),
+        )
+        .mount(&upstream)
+        .await;
+    let (proxy, _dir) = start_proxy("openai_chat", &upstream).await;
+    let response = reqwest::Client::new()
+        .post(format!("{proxy}/v1/chat/completions"))
+        .json(&serde_json::json!({
+            "model": "public-model",
+            "messages": [
+                {"role":"developer","content":"You are a coding assistant."},
+                {"role":"user","content":"hi"}
+            ],
+            "stream": true
+        }))
+        .send()
+        .await
+        .unwrap();
+    assert_eq!(response.status(), 200);
+    assert_eq!(response.text().await.unwrap(), fixture);
+    let forwarded: serde_json::Value =
+        serde_json::from_slice(&upstream.received_requests().await.unwrap()[0].body).unwrap();
+    assert_eq!(forwarded["messages"][0]["role"], "system");
+    assert_eq!(
+        forwarded["messages"][0]["content"],
+        "You are a coding assistant."
+    );
+    assert_eq!(forwarded["messages"][1]["role"], "user");
+}

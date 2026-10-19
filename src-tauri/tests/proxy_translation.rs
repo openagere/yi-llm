@@ -303,3 +303,112 @@ async fn anthropic_function_call_and_result_round_trip() {
         "call_cwd"
     );
 }
+
+#[tokio::test]
+async fn codex_developer_message_reaches_chat_upstream_as_system() {
+    let upstream = MockServer::start().await;
+    let fixture = concat!(
+        "data: {\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"ok\"}}],\"usage\":null}\n\n",
+        "data: {\"choices\":[{\"index\":0,\"delta\":{},\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":3,\"completion_tokens\":1,\"total_tokens\":4}}\n\n",
+        "data: [DONE]\n\n"
+    );
+    // A chat upstream that implements only the classic role set rejects `developer`,
+    // so the request must never carry it (mirrors the reported Codex failure).
+    Mock::given(method("POST"))
+        .and(path("/chat/completions"))
+        .and(body_string_contains("\"developer\""))
+        .respond_with(ResponseTemplate::new(400).set_body_string(
+            "{\"error\":{\"message\":\"developer is not one of ['system', 'assistant', 'user', 'tool', 'function']\"}}",
+        ))
+        .mount(&upstream)
+        .await;
+    Mock::given(method("POST"))
+        .and(path("/chat/completions"))
+        .and(body_string_contains("\"role\":\"system\""))
+        .respond_with(
+            ResponseTemplate::new(200)
+                .insert_header("content-type", "text/event-stream")
+                .set_body_string(fixture),
+        )
+        .mount(&upstream)
+        .await;
+    let (proxy, _dir) = start_proxy("openai_chat", &upstream).await;
+    let response = reqwest::Client::new()
+        .post(format!("{proxy}/v1/responses"))
+        .json(&serde_json::json!({
+            "model": "public-model",
+            "input": [
+                {"type":"message","role":"developer","content":[{"type":"input_text","text":"You are a coding assistant."}]},
+                {"type":"message","role":"user","content":[{"type":"input_text","text":"hi"}]}
+            ],
+            "stream": true,
+            "store": false
+        }))
+        .send()
+        .await
+        .unwrap();
+    assert_eq!(response.status(), 200);
+    assert!(response
+        .text()
+        .await
+        .unwrap()
+        .contains("response.completed"));
+    let forwarded: serde_json::Value =
+        serde_json::from_slice(&upstream.received_requests().await.unwrap()[0].body).unwrap();
+    assert_eq!(forwarded["messages"][0]["role"], "system");
+    assert_eq!(
+        forwarded["messages"][0]["content"],
+        "You are a coding assistant."
+    );
+    assert_eq!(forwarded["messages"][1]["role"], "user");
+}
+
+#[tokio::test]
+async fn assistant_tool_call_message_sends_required_content_to_chat_upstream() {
+    let upstream = MockServer::start().await;
+    let fixture = concat!(
+        "data: {\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"done\"}}],\"usage\":null}\n\n",
+        "data: {\"choices\":[{\"index\":0,\"delta\":{},\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":4,\"completion_tokens\":1,\"total_tokens\":5}}\n\n",
+        "data: [DONE]\n\n"
+    );
+    Mock::given(method("POST"))
+        .and(path("/chat/completions"))
+        .respond_with(
+            ResponseTemplate::new(200)
+                .insert_header("content-type", "text/event-stream")
+                .set_body_string(fixture),
+        )
+        .mount(&upstream)
+        .await;
+    let (proxy, _dir) = start_proxy("openai_chat", &upstream).await;
+    let response = reqwest::Client::new()
+        .post(format!("{proxy}/v1/responses"))
+        .json(&serde_json::json!({
+            "model": "public-model",
+            "input": [
+                {"type":"message","role":"user","content":[{"type":"input_text","text":"list the directory"}]},
+                {"type":"function_call","call_id":"call_cwd","name":"shell","arguments":"{\"cmd\":\"ls\"}"},
+                {"type":"function_call_output","call_id":"call_cwd","output":"a\nb"}
+            ],
+            "stream": true,
+            "store": false
+        }))
+        .send()
+        .await
+        .unwrap();
+    assert_eq!(response.status(), 200);
+    assert!(response
+        .text()
+        .await
+        .unwrap()
+        .contains("response.completed"));
+    let forwarded: serde_json::Value =
+        serde_json::from_slice(&upstream.received_requests().await.unwrap()[0].body).unwrap();
+    // Qwen / DashScope compatible mode (and other strict upstreams) reject an
+    // assistant message that has no `content` field; tool calls keep it empty.
+    assert_eq!(forwarded["messages"][1]["role"], "assistant");
+    assert_eq!(forwarded["messages"][1]["content"], "");
+    assert_eq!(forwarded["messages"][1]["tool_calls"][0]["id"], "call_cwd");
+    assert_eq!(forwarded["messages"][2]["role"], "tool");
+    assert_eq!(forwarded["messages"][2]["tool_call_id"], "call_cwd");
+}

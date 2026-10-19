@@ -139,6 +139,8 @@ Codex 使用原生 `model_catalog_json` 目录，`/model` 会列出所选模型�
 ## 协议能力与限制
 
 - 跨协议转换覆盖：文本对话、图片输入（Anthropic 上游要求 base64 data URL）、function tools 与结果、Responses 命名空间工具（上游扁平化、输出还原）、自定义文本工具、推理文本、token 上限与 JSON Schema 结构化输出（`text.format` → Anthropic `output_config.format` / Chat `response_format`）。
+- 角色归一：Codex 等客户端发送的 `developer` 指令消息转发到 Chat Completions 上游时改以 `system` 表达（多数 OpenAI 兼容上游只接受经典角色集），指令文本不变。
+- 字段补齐：仅含 `tool_calls` 的 assistant 消息会显式带上 `content: ""`，满足 Qwen / DashScope 兼容模式等要求 `content` 必填的上游（与 OpenAI 官方示例一致）。
 - 推理 payloads 跨轮保留：Anthropic `signature_delta` / `redacted_thinking` 以 reasoning item 的 `encrypted_content` 呈现并在下一轮回传；Chat Completions 的 `reasoning_content` 在 assistant 消息上重放并映射为推理输出。
 - 推理档位：客户端发送 `default` / `off` 档位时，代理分别解析为模型配置的默认档位（未配置默认档位时取模型支持档位中最低的一个）与「不发送思考档位」（`off`,以及 OpenAI 兼容写法 `none`）；无推理能力的模型直接省略该字段，由端点自行决定。
 - 提示缓存用量通过 `input_tokens_details.cached_tokens` 上报。

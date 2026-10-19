@@ -47,7 +47,11 @@ pub fn build_request(
         let reasoning = pending_reasoning.join("\n");
         messages.push(ChatMessage {
             role: "assistant".into(),
-            content: None,
+            // Strict OpenAI-compatible upstreams (Qwen / DashScope compatible mode
+            // among them) reject a message that has no `content` field. An assistant
+            // message carrying only tool calls keeps it as an empty string, which is
+            // also what the OpenAI tool-call examples send.
+            content: Some(serde_json::Value::String(String::new())),
             reasoning_content: (!reasoning.is_empty()).then_some(reasoning),
             tool_call_id: None,
             tool_calls: (!pending_calls.is_empty()).then(|| std::mem::take(pending_calls)),
@@ -107,7 +111,10 @@ pub fn build_request(
                     serde_json::Value::String(text)
                 };
                 messages.push(ChatMessage {
-                    role,
+                    // Responses clients (Codex) carry instructions as a
+                    // `developer` input message; the Chat Completions upstream
+                    // may implement only the classic role set.
+                    role: upstream_role(&role).into(),
                     content: Some(wire_content),
                     reasoning_content: None,
                     tool_call_id: None,
@@ -410,5 +417,50 @@ mod tests {
             .find(|m| m.role == "assistant")
             .expect("assistant message");
         assert_eq!(assistant.tool_calls.as_ref().unwrap().len(), 2);
+    }
+
+    #[test]
+    fn developer_input_message_is_sent_as_system_to_chat_upstream() {
+        let req: ResponsesRequest = serde_json::from_value(serde_json::json!({
+            "model": "public-model",
+            "input": [
+                {"type": "message", "role": "developer", "content": [{"type": "input_text", "text": "be terse"}]},
+                {"type": "message", "role": "user", "content": [{"type": "input_text", "text": "hi"}]}
+            ]
+        }))
+        .unwrap();
+        let out = build_request(&req, &provider(), "gpt-5").unwrap();
+        let roles: Vec<&str> = out.messages.iter().map(|m| m.role.as_str()).collect();
+        assert_eq!(roles, ["system", "user"]);
+        assert_eq!(
+            out.messages[0]
+                .content
+                .as_ref()
+                .and_then(|content| content.as_str()),
+            Some("be terse")
+        );
+    }
+
+    #[test]
+    fn assistant_tool_call_message_carries_required_empty_content() {
+        let input = serde_json::json!([
+            {"type": "message", "role": "user", "content": [{"type": "input_text", "text": "run"}]},
+            {"type": "function_call", "call_id": "call_1", "name": "shell", "arguments": "{}"},
+            {"type": "function_call_output", "call_id": "call_1", "output": "ok"}
+        ]);
+        let req = req_from_input(input);
+        let out = build_request(&req, &provider(), "gpt-5").unwrap();
+        let assistant = out
+            .messages
+            .iter()
+            .find(|message| message.role == "assistant")
+            .expect("assistant message");
+        assert_eq!(
+            assistant.content.as_ref().and_then(|c| c.as_str()),
+            Some("")
+        );
+        let wire = serde_json::to_value(assistant).unwrap();
+        assert_eq!(wire["content"], "");
+        assert_eq!(wire["tool_calls"][0]["id"], "call_1");
     }
 }

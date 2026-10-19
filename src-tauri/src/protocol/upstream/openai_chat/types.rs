@@ -44,6 +44,46 @@ pub struct ChatMessage {
     pub tool_calls: Option<Vec<ChatToolCall>>,
 }
 
+/// The role a Chat Completions upstream sees.
+///
+/// Codex sends its instructions as a `developer` message, but only OpenAI's own
+/// models implement the newer `developer` role: most OpenAI-compatible providers
+/// accept just the classic `system` / `user` / `assistant` / `tool` / `function`
+/// set and reject the whole request with 400 when they see anything else. The
+/// instruction text is preserved; only the role name is expressed the classic way.
+pub fn upstream_role(role: &str) -> &str {
+    match role {
+        "developer" => "system",
+        other => other,
+    }
+}
+
+/// Apply [`upstream_role`] to every message role of a raw Chat Completions
+/// request body. Codex sends its instructions as a `developer` message, and a
+/// same-protocol forward would otherwise hand that role to an upstream that
+/// only implements the classic role set.
+pub fn express_developer_messages_as_system(body: &mut serde_json::Value) {
+    let Some(messages) = body
+        .get_mut("messages")
+        .and_then(serde_json::Value::as_array_mut)
+    else {
+        return;
+    };
+    for message in messages {
+        let Some(role) = message
+            .get("role")
+            .and_then(serde_json::Value::as_str)
+            .map(str::to_owned)
+        else {
+            continue;
+        };
+        let mapped = upstream_role(&role);
+        if mapped != role.as_str() {
+            message["role"] = serde_json::Value::String(mapped.to_owned());
+        }
+    }
+}
+
 #[derive(Debug, Clone, Serialize)]
 pub struct ChatResponseFormat {
     #[serde(rename = "type")]
