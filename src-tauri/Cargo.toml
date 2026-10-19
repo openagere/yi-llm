@@ -1,6 +1,6 @@
 [package]
 name = "yi-llm"
-version = "0.1.4"
+version = "0.1.5"
 description = "Local multi-protocol LLM gateway and management desktop app"
 authors = ["peng.yi"]
 license = "MIT"
