@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Activity, CircleAlert, Download, RefreshCw } from "lucide-react";
+import { CircleAlert, Download, Gauge, RefreshCw } from "lucide-react";
 import { CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { describeError } from "@/shared/api";
 import { useI18n, type MessageKey } from "@/shared/i18n";
@@ -42,7 +42,7 @@ export function ProxyMonitor({ visible }: { visible: boolean }) {
   }
 
   return <section className="proxy-monitor" aria-label={t("proxy.monitor.report")}>
-    <div className="proxy-monitor-heading"><div className="proxy-section-title"><Activity size={16} /><h2>{t("proxy.monitor.heading")}</h2><span>{snapshot ? t("proxy.monitor.updatedAt", { time: clock(snapshot.sampled_at) }) : t("proxy.monitor.reading")}</span></div><div className="proxy-monitor-tools"><button type="button" className="icon-button" title={t("proxy.monitor.refresh")} aria-label={t("proxy.monitor.refresh")} onClick={() => void query.refetch()}><RefreshCw size={15} /></button><button type="button" className="icon-button" title={t("proxy.monitor.export")} aria-label={t("proxy.monitor.export")} onClick={exportReport} disabled={!snapshot || stale}><Download size={15} /></button></div></div>
+    <div className="proxy-monitor-heading"><div className="proxy-section-title"><Gauge size={16} /><h2>{t("proxy.monitor.heading")}</h2><span>{snapshot ? t("proxy.monitor.updatedAt", { time: clock(snapshot.sampled_at) }) : t("proxy.monitor.reading")}</span></div><div className="proxy-monitor-tools"><button type="button" className="icon-button" title={t("proxy.monitor.refresh")} aria-label={t("proxy.monitor.refresh")} onClick={() => void query.refetch()}><RefreshCw size={15} /></button><button type="button" className="icon-button" title={t("proxy.monitor.export")} aria-label={t("proxy.monitor.export")} onClick={exportReport} disabled={!snapshot || stale}><Download size={15} /></button></div></div>
     {error && <div className="proxy-log-error" role="alert"><CircleAlert size={15} /><span>{t("proxy.errors.monitorFailed")}{error}</span></div>}
     <dl className="proxy-monitor-facts">
       {fact(t("proxy.monitor.facts.connections"), total ? count(total.connections) : "--", t("proxy.monitor.facts.connectionsDetail", { peak: total?.peak_connections ?? "--" }))}

@@ -1,4 +1,4 @@
-import { Brain, Boxes, CircleHelp, FileText, LoaderCircle, MinusCircle, Save } from "lucide-react";
+import { Brain, Boxes, CheckCircle2, CircleHelp, Gauge, LoaderCircle, MinusCircle } from "lucide-react";
 import "@/styles/models.css";
 import { useI18n } from "@/shared/i18n";
 import { useNavigation } from "@/shared/navigation";
@@ -16,7 +16,7 @@ import { TokenCapacityField } from "./TokenCapacityField";
 const EFFORT_STATES = [
   { value: "unknown", icon: CircleHelp, labelKey: "model.editor.effort.unknown" },
   { value: "unsupported", icon: MinusCircle, labelKey: "model.editor.effort.unsupported" },
-  { value: "supported", icon: Brain, labelKey: "model.editor.effort.supported" },
+  { value: "supported", icon: CheckCircle2, labelKey: "model.editor.effort.supported" },
 ] as const satisfies readonly { value: EffortSupport; icon: typeof Brain; labelKey: "model.editor.effort.unknown" | "model.editor.effort.unsupported" | "model.editor.effort.supported" }[];
 
 function ModelEditorForm({ model, models }: { model: StandardModel | null; models: StandardModel[] }) {
@@ -28,7 +28,7 @@ function ModelEditorForm({ model, models }: { model: StandardModel | null; model
   const footer = busy ? t("model.editor.footer.saving") : dirty ? t("model.editor.footer.unsaved") : existing ? t("model.editor.footer.saved") : t("model.editor.footer.fresh");
 
   return <section className="editor-page connection-editor-page standard-model-editor">
-    <PageHeader eyebrow={existing ? initial.name : t("model.editor.eyebrowNew")} title={existing ? t("model.editor.titleEdit") : t("model.editor.titleAdd")} onBack={back} backLabel={t("model.editor.back")} disabled={busy} primaryAction={<button type="submit" form="standard-model-form" className="primary-button" disabled={busy || (existing && !dirty)}>{busy ? <LoaderCircle className="spinning" size={16} /> : <Save size={16} />}{busy ? t("model.editor.saving") : t("model.editor.save")}</button>} />
+    <PageHeader eyebrow={existing ? initial.name : t("model.editor.eyebrowNew")} title={existing ? t("model.editor.titleEdit") : t("model.editor.titleAdd")} onBack={back} backLabel={t("model.editor.back")} disabled={busy} />
     <form id="standard-model-form" noValidate onSubmit={(event) => { event.preventDefault(); form.submit(); }}>
       <fieldset className="connection-form-fields" disabled={busy}>
         <section className="connection-form-section">
@@ -43,7 +43,7 @@ function ModelEditorForm({ model, models }: { model: StandardModel | null; model
         </section>
         <ModalitiesSection form={form} />
         <section className="connection-form-section">
-          <div className="connection-section-title"><FileText size={17} /><h2>{t("model.editor.capacity.title")}</h2></div>
+          <div className="connection-section-title"><Gauge size={17} /><h2>{t("model.editor.capacity.title")}</h2></div>
           <div className="standard-model-info-grid">{CAPACITY_FIELDS.map((field) => <TokenCapacityField key={field} field={field} text={tokenDrafts[field]} error={errors[field]} disabled={busy} onChange={(value) => form.changeCapacity(field, value)} onBlur={() => form.blurCapacity(field)} />)}</div>
         </section>
         <section className="connection-form-section">
@@ -60,7 +60,7 @@ function ModelEditorForm({ model, models }: { model: StandardModel | null; model
           </div>}
         </section>
       </fieldset>
-      <footer className="connection-editor-footer"><span className={`draft-state ${dirty ? "unsaved" : ""}`}><span />{footer}</span><div><button type="button" className="secondary-button" disabled={busy} onClick={back}>{t("model.editor.cancel")}</button><button type="submit" className="primary-button" disabled={busy || (existing && !dirty)}><Save size={15} />{t("model.editor.save")}</button></div></footer>
+      <footer className="connection-editor-footer"><span className={`draft-state ${dirty ? "unsaved" : ""}`}><span />{footer}</span><div><button type="button" className="secondary-button" disabled={busy} onClick={back}>{t("model.editor.cancel")}</button><button type="submit" className="primary-button" disabled={busy || (existing && !dirty)}>{busy && <LoaderCircle size={15} className="spinning" />}{busy ? t("model.editor.saving") : t("model.editor.save")}</button></div></footer>
     </form>
   </section>;
 }

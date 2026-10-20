@@ -1,5 +1,5 @@
 import { useMemo, useRef, useState } from "react";
-import { ArrowRightLeft, Boxes, Check, Eye, EyeOff, FlaskConical, LoaderCircle, Plus, Save, SlidersHorizontal, Trash2 } from "lucide-react";
+import { ArrowRightLeft, Boxes, Cable, Check, Cpu, Eye, EyeOff, FlaskConical, LoaderCircle, Play, Plus, SlidersHorizontal, Trash2 } from "lucide-react";
 import { describeError } from "@/shared/api";
 import { useStandardModels, ModelCapabilitySummary, tokenLabel, type StandardModel } from "@/features/models";
 import { useI18n, type Translate } from "@/shared/i18n";
@@ -136,17 +136,15 @@ function ProviderEditorForm({ provider, providers, standardModels }: { provider:
     } finally { setBusy(null); }
   }
   const footer = busy === "test" ? t("provider.editor.footer.testing") : busy === "save" ? t("provider.editor.footer.saving") : dirty ? t("provider.editor.footer.unsaved") : provider ? t("provider.editor.footer.saved") : t("provider.editor.footer.fresh");
-  const submitLabel = busy === "save" ? t("provider.editor.saving") : provider ? t("provider.editor.saveChanges") : t("provider.editor.titleAdd");
+  const submitLabel = busy === "save" ? t("provider.editor.saving") : t("provider.editor.saveChanges");
 
   return (
     <section className="editor-page connection-editor-page">
-      <PageHeader eyebrow={provider ? provider.name : t("provider.editor.eyebrowNew")} title={provider ? t("provider.editor.titleEdit") : t("provider.editor.titleAdd")} onBack={back} backLabel={t("provider.editor.back")} disabled={Boolean(busy)} primaryAction={
-        <button type="submit" form="provider-form" className="primary-button" disabled={Boolean(busy) || Boolean(provider && !dirty)}>{busy === "save" ? <LoaderCircle className="spinning" size={16} /> : provider ? <Save size={16} /> : <Plus size={16} />}{submitLabel}</button>
-      } />
+      <PageHeader eyebrow={provider ? provider.name : t("provider.editor.eyebrowNew")} title={provider ? t("provider.editor.titleEdit") : t("provider.editor.titleAdd")} onBack={back} backLabel={t("provider.editor.back")} disabled={Boolean(busy)} />
       <form ref={form} id="provider-form" noValidate onSubmit={(event) => { event.preventDefault(); save(); }}>
         <fieldset disabled={Boolean(busy)} className="connection-form-fields provider-editor-grid">
           <section className="connection-form-section">
-            <div className="connection-section-title"><ProviderIcon provider={draft} size={18} /><h2>{t("provider.editor.info")}</h2></div>
+            <div className="connection-section-title"><Cable size={17} /><h2>{t("provider.editor.info")}</h2></div>
             <div className="connection-form-grid">
               <label className="field connection-name-field"><span>{t("provider.editor.name")}<span className="required-mark">*</span></span><input autoFocus name="name" value={draft.name} aria-invalid={Boolean(fieldErrors.name)} onChange={(event) => update("name", event.target.value)} placeholder={t("provider.editor.namePlaceholder")} />{fieldErrors.name && <small className="field-error">{fieldErrors.name}</small>}</label>
               <label className="field connection-short-code-field"><span>{t("provider.editor.alias")}<span className="required-mark">*</span></span><input name="short_code" value={draft.short_code} maxLength={24} aria-invalid={Boolean(fieldErrors.short_code)} onChange={(event) => update("short_code", event.target.value.toLowerCase())} placeholder={t("provider.editor.aliasPlaceholder")} autoComplete="off" spellCheck={false} />{fieldErrors.short_code && <small className="field-error">{fieldErrors.short_code}</small>}</label>
@@ -171,7 +169,7 @@ function ProviderEditorForm({ provider, providers, standardModels }: { provider:
               {draft.models.map((model, index) => {
                 const standard = matchingStandards.find((item) => item.id === model.standard_model_id);
                 return <div className="provider-model-binding" key={`${model.id}-${index}`}><div className="connection-model-row"><label className="provider-model-name"><input aria-label={t("provider.editor.models.nameLabel", { index: index + 1 })} value={model.name} placeholder={draft.provider_type === "anthropic" ? "claude-sonnet-4-5" : "gpt-4.1"} spellCheck={false} onChange={(event) => update("models", draft.models.map((item, itemIndex) => itemIndex === index ? { ...item, name: event.target.value } : item))} /></label>
-                  <Select label={t("provider.editor.models.standardLabel", { index: index + 1 })} value={standard?.id ?? ""} icon={Boxes} className="provider-standard-model-select" menuClassName="standard-model-select-menu" disabled={Boolean(busy) || !matchingStandards.length}
+                  <Select label={t("provider.editor.models.standardLabel", { index: index + 1 })} value={standard?.id ?? ""} icon={Cpu} className="provider-standard-model-select" menuClassName="standard-model-select-menu" disabled={Boolean(busy) || !matchingStandards.length}
                     onValueChange={(value) => update("models", draft.models.map((item, itemIndex) => itemIndex === index ? { ...item, standard_model_id: value || null } : item))}
                     options={[{ value: "", label: matchingStandards.length ? t("provider.editor.models.choose") : t("provider.editor.models.noneForProtocol") }, ...matchingStandards.map((item) => ({ value: item.id, label: item.name, leading: <ProviderIcon brand={item.brand || modelBrand(item.name)} size={20} />, description: modelDescription(item, t) }))]} />
                   <label className="toggle-row provider-model-nonstandard"><input type="checkbox" checked={Boolean(model.non_standard)} aria-label={t("provider.editor.models.nonStandardLabel", { index: index + 1 })} onChange={(event) => update("models", draft.models.map((item, itemIndex) => itemIndex === index ? { ...item, non_standard: event.target.checked } : item))} /><span className="toggle" /></label>
@@ -183,14 +181,14 @@ function ProviderEditorForm({ provider, providers, standardModels }: { provider:
           </section>
           <section className="connection-form-section connection-test-section">
             <div className="connection-section-title"><FlaskConical size={17} /><h2>{t("provider.editor.test.title")}</h2></div>
-            <div className="connection-test-controls"><label className="field"><span>{t("provider.editor.test.model")}<small className="optional-label">{cleanModels()[0]?.name ? t("provider.editor.optional") : t("provider.editor.required")}</small></span><input name="test_model" aria-invalid={Boolean(fieldErrors.test_model)} value={testModel} onChange={(event) => { setTestModel(event.target.value); setFieldErrors((current) => ({ ...current, test_model: "" })); }} placeholder={cleanModels()[0]?.name || t("provider.editor.test.modelPlaceholder")} spellCheck={false} /></label><button type="button" className="secondary-button" onClick={() => void testConnection()}>{busy === "test" ? <LoaderCircle size={16} className="spinning" /> : <FlaskConical size={16} />}{busy === "test" ? t("provider.editor.test.testing") : t("provider.editor.test.action")}</button></div>
+            <div className="connection-test-controls"><label className="field"><span>{t("provider.editor.test.model")}<small className="optional-label">{cleanModels()[0]?.name ? t("provider.editor.optional") : t("provider.editor.required")}</small></span><input name="test_model" aria-invalid={Boolean(fieldErrors.test_model)} value={testModel} onChange={(event) => { setTestModel(event.target.value); setFieldErrors((current) => ({ ...current, test_model: "" })); }} placeholder={cleanModels()[0]?.name || t("provider.editor.test.modelPlaceholder")} spellCheck={false} /></label><button type="button" className="secondary-button" onClick={() => void testConnection()}>{busy === "test" ? <LoaderCircle size={16} className="spinning" /> : <Play size={15} />}{busy === "test" ? t("provider.editor.test.testing") : t("provider.editor.test.action")}</button></div>
             {fieldErrors.test_model && <small className="field-error">{fieldErrors.test_model}</small>}
           </section>
           <details className="connection-advanced" open={fieldErrors.extra ? true : undefined}><summary><SlidersHorizontal size={16} /><span>{t("provider.editor.advanced")}</span></summary><div className="connection-advanced-content">
             <label className="field"><span>{t("provider.editor.headers")}</span><textarea className="json-input" value={extraText} aria-invalid={Boolean(fieldErrors.extra)} onChange={(event) => { setExtraText(event.target.value); setFieldErrors((current) => ({ ...current, extra: "" })); }} spellCheck={false} placeholder={'{\n  "Header-Name": "value"\n}'} />{fieldErrors.extra && <small className="field-error">{fieldErrors.extra}</small>}</label>
           </div></details>
         </fieldset>
-        <footer className="connection-editor-footer"><span className={`draft-state ${dirty ? "unsaved" : ""}`}><span />{footer}</span><div><button type="button" className="secondary-button" disabled={Boolean(busy)} onClick={back}>{t("provider.editor.cancel")}</button><button type="submit" className="primary-button" disabled={Boolean(busy) || Boolean(provider && !dirty)}>{busy === "save" ? <LoaderCircle size={16} className="spinning" /> : provider ? <Save size={16} /> : <Plus size={16} />}{submitLabel}</button></div></footer>
+        <footer className="connection-editor-footer"><span className={`draft-state ${dirty ? "unsaved" : ""}`}><span />{footer}</span><div><button type="button" className="secondary-button" disabled={Boolean(busy)} onClick={back}>{t("provider.editor.cancel")}</button><button type="submit" className="primary-button" disabled={Boolean(busy) || Boolean(provider && !dirty)}>{busy === "save" && <LoaderCircle size={16} className="spinning" />}{submitLabel}</button></div></footer>
       </form>
     </section>
   );

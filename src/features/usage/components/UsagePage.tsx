@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { Activity, Boxes, ChartNoAxesColumnIncreasing, LoaderCircle, RefreshCw, X } from "lucide-react";
+import { Boxes, ChartNoAxesColumnIncreasing, History, LoaderCircle, RefreshCw, X } from "lucide-react";
 import "@/styles/usage.css";
 import { useI18n } from "@/shared/i18n";
 import { useNavigation } from "@/shared/navigation";
@@ -19,7 +19,7 @@ type UsageTab = "overview" | "models" | "records";
 const TABS = [
   { id: "overview", label: "usage.tabs.overview", icon: ChartNoAxesColumnIncreasing },
   { id: "models", label: "usage.tabs.models", icon: Boxes },
-  { id: "records", label: "usage.tabs.records", icon: Activity },
+  { id: "records", label: "usage.tabs.records", icon: History },
 ] as const;
 
 export function UsagePage() {

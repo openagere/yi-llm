@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ArrowDownToLine, CircleAlert, Clipboard, Download, FileText, Maximize2, Minimize2, Pause, Play, RefreshCw, Search, X } from "lucide-react";
+import { ArrowDownToLine, Check, CircleAlert, Copy, Download, FileText, Maximize2, Minimize2, Pause, Play, RefreshCw, Search, X } from "lucide-react";
 import { describeError } from "@/shared/api";
 import { useI18n } from "@/shared/i18n";
 import { notify } from "@/shared/notify";
@@ -15,7 +15,10 @@ export function ProxyLogs({ visible }: { visible: boolean }) {
   const [expanded, setExpanded] = useState(false);
   const [query, setQuery] = useState("");
   const [level, setLevel] = useState("all");
+  const [copied, setCopied] = useState(false);
+  const copyTimer = useRef<number | undefined>(undefined);
   const output = useRef<HTMLDivElement>(null);
+  useEffect(() => () => window.clearTimeout(copyTimer.current), []);
   const logsQuery = useProxyLogs({ active: visible, autoRefresh });
   const logs = logsQuery.data ?? "";
   const loaded = logsQuery.data !== undefined;
@@ -35,8 +38,13 @@ export function ProxyLogs({ visible }: { visible: boolean }) {
   useEffect(() => { if (follow && visible && output.current) output.current.scrollTop = output.current.scrollHeight; }, [filtered, follow, visible, expanded]);
 
   async function copy() {
-    try { await navigator.clipboard.writeText(filtered.map((entry) => entry.raw).join("\n")); notify(t("proxy.logs.copied")); }
-    catch { notify(t("proxy.logs.copyFailed"), "error"); }
+    try {
+      await navigator.clipboard.writeText(filtered.map((entry) => entry.raw).join("\n"));
+      window.clearTimeout(copyTimer.current);
+      setCopied(true);
+      copyTimer.current = window.setTimeout(() => setCopied(false), 1800);
+      notify(t("proxy.logs.copied"));
+    } catch { notify(t("proxy.logs.copyFailed"), "error"); }
   }
   function download() {
     const blob = new Blob([filtered.map((entry) => entry.raw).join("\n")], { type: "text/plain;charset=utf-8" });
@@ -55,7 +63,7 @@ export function ProxyLogs({ visible }: { visible: boolean }) {
       <div className="proxy-log-tools">
         <button type="button" className="icon-button" title={autoRefresh ? t("proxy.logs.pauseRefresh") : t("proxy.logs.resumeRefresh")} aria-label={autoRefresh ? t("proxy.logs.pauseRefresh") : t("proxy.logs.resumeRefresh")} onClick={() => setAutoRefresh((value) => !value)}>{autoRefresh ? <Pause size={15} /> : <Play size={15} />}</button>
         <button type="button" className="icon-button" title={t("proxy.logs.refresh")} aria-label={t("proxy.logs.refresh")} disabled={logsQuery.isFetching} onClick={() => void logsQuery.refetch()}><RefreshCw size={15} className={logsQuery.isFetching ? "proxy-spin" : ""} /></button>
-        <button type="button" className="icon-button" title={t("proxy.logs.copy")} aria-label={t("proxy.logs.copy")} disabled={!filtered.length} onClick={() => void copy()}><Clipboard size={15} /></button>
+        <button type="button" className="icon-button" title={t("proxy.logs.copy")} aria-label={t("proxy.logs.copy")} disabled={!filtered.length} onClick={() => void copy()}>{copied ? <Check size={15} /> : <Copy size={15} />}</button>
         <button type="button" className="icon-button" title={t("proxy.logs.export")} aria-label={t("proxy.logs.export")} disabled={!filtered.length} onClick={download}><Download size={15} /></button>
         <button type="button" className="icon-button" title={expanded ? t("proxy.logs.collapse") : t("proxy.logs.expand")} aria-label={expanded ? t("proxy.logs.collapse") : t("proxy.logs.expand")} aria-pressed={expanded} onClick={() => setExpanded((value) => !value)}>{expanded ? <Minimize2 size={15} /> : <Maximize2 size={15} />}</button>
       </div>

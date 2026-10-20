@@ -7,8 +7,8 @@ for (const theme of ["light", "dark"] as const) {
     await page.goto("/");
     const transfer = page.locator(".workspace-header .transfer-action");
     await expect(transfer).toHaveCount(2);
-    await expect(transfer.nth(0).locator("svg.lucide-arrow-down-to-line")).toBeVisible();
-    await expect(transfer.nth(1).locator("svg.lucide-arrow-up-from-line")).toBeVisible();
+    await expect(transfer.nth(0).locator("svg.lucide-upload")).toBeVisible();
+    await expect(transfer.nth(1).locator("svg.lucide-download")).toBeVisible();
     await page.locator(".sidebar").getByRole("button", { name: "设置", exact: true }).click();
     const light = page.locator(".preference-option-light");
     const dark = page.locator(".preference-option-dark");

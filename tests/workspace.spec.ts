@@ -114,7 +114,7 @@ test("provider and model editors, unsaved changes, dialogs and select portals", 
   await page.locator('input[name="name"]').fill("New connection");
   await page.locator(".sidebar").getByRole("button", { name: "模型管理", exact: true }).click();
   await expect(page.getByRole("dialog")).toBeVisible();
-  await page.getByRole("button", { name: "放弃修改", exact: true }).click();
+  await page.getByRole("dialog").getByRole("button", { name: "确定", exact: true }).click();
   await page.getByRole("button", { name: "添加模型", exact: true }).click();
   await expect(page.locator("h1:visible")).toHaveText("添加模型");
   await expectFits(page);
@@ -219,7 +219,7 @@ test("native titlebar routes window operations and protects unsaved edits", asyn
   await expect(page.getByRole("dialog")).toBeVisible();
   const commands = () => page.evaluate(() => (window as typeof window & { __nativeCommands: { command: string }[] }).__nativeCommands.map(item => item.command));
   expect(await commands()).not.toContain("plugin:window|close");
-  await page.getByRole("button", { name: "放弃修改", exact: true }).click();
+  await page.getByRole("dialog").getByRole("button", { name: "确定", exact: true }).click();
   expect(await commands()).toContain("plugin:window|close");
   expect(await commands()).toContain("plugin:window|start_dragging");
   expect(await commands()).toContain("plugin:window|minimize");
@@ -608,12 +608,12 @@ test("provider configuration is exported and imported with a passphrase-protecte
   await expect(exportDialog).toBeVisible();
   await exportDialog.getByLabel("加密字符串", { exact: true }).fill("correct horse");
   await exportDialog.getByLabel("确认加密字符串", { exact: true }).fill("wrong horse");
-  await exportDialog.getByRole("button", { name: "导出", exact: true }).click();
+  await exportDialog.getByRole("button", { name: "确定", exact: true }).click();
   await expect(exportDialog.getByRole("alert")).toHaveText("两次输入的加密字符串不一致");
   expect(await transferCalls(page)).toEqual([]);
 
   await exportDialog.getByLabel("确认加密字符串", { exact: true }).fill("correct horse");
-  await exportDialog.getByRole("button", { name: "导出", exact: true }).click();
+  await exportDialog.getByRole("button", { name: "确定", exact: true }).click();
   await expect(page.getByRole("dialog")).toHaveCount(0);
   await expect(page.locator(".app-toast")).toContainText("已导出 4 个 Provider、4 个模型映射");
   expect(await transferCalls(page)).toEqual([{ command: "export_provider_config", args: { passphrase: "correct horse", title: "导出 Provider 配置" } }]);
@@ -623,12 +623,12 @@ test("provider configuration is exported and imported with a passphrase-protecte
   const importDialog = page.getByRole("dialog");
   await expect(importDialog).toBeVisible();
   await importDialog.getByLabel("加密字符串", { exact: true }).fill("short");
-  await importDialog.getByRole("button", { name: "导入", exact: true }).click();
+  await importDialog.getByRole("button", { name: "确定", exact: true }).click();
   await expect(importDialog.getByRole("alert")).toHaveText("加密字符串至少需要 8 位");
   expect(await transferCalls(page)).toHaveLength(1);
 
   await importDialog.getByLabel("加密字符串", { exact: true }).fill("correct horse");
-  await importDialog.getByRole("button", { name: "导入", exact: true }).click();
+  await importDialog.getByRole("button", { name: "确定", exact: true }).click();
   await expect(importDialog.getByRole("alert")).toHaveText("请先选择要导入的配置文件");
   expect(await transferCalls(page)).toHaveLength(1);
 
@@ -638,7 +638,7 @@ test("provider configuration is exported and imported with a passphrase-protecte
     buffer: Buffer.from("ciphertext"),
   });
   await expect(importDialog.getByText("providers.yillm", { exact: true })).toBeVisible();
-  await importDialog.getByRole("button", { name: "导入", exact: true }).click();
+  await importDialog.getByRole("button", { name: "确定", exact: true }).click();
   await expect(page.getByRole("dialog")).toHaveCount(0);
   await expect(page.locator(".app-toast")).toContainText("已导入 2 个 Provider、3 个模型映射（新增 1 个标准模型）");
   expect((await transferCalls(page))[1]).toEqual({
@@ -659,7 +659,7 @@ test("import reports terminal configuration warnings instead of silently hiding 
     mimeType: "application/json",
     buffer: Buffer.from("ciphertext"),
   });
-  await dialog.getByRole("button", { name: "导入", exact: true }).click();
+  await dialog.getByRole("button", { name: "确定", exact: true }).click();
   await expect(page.locator(".app-toast")).toContainText("codex 配置未更新");
 });
 
@@ -681,7 +681,7 @@ for (const mode of ["proxy", "direct"] as const) {
     }
     await sidebar.getByRole("button", { name: "设置", exact: true }).click();
     await expect(page.getByRole("dialog")).toHaveCount(1);
-    await page.getByRole("button", { name: "放弃修改", exact: true }).click();
+    await page.getByRole("dialog").getByRole("button", { name: "确定", exact: true }).click();
     await expect(page.getByRole("dialog")).toHaveCount(0);
     await expect(page.locator("h1:visible")).toHaveText("设置");
     await sidebar.getByRole("button", { name: "Codex CLI", exact: true }).click();

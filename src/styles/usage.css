@@ -137,7 +137,7 @@
 .analytics-page-footer { display: flex; align-items: center; justify-content: space-between; gap: 15px; margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--border); color: var(--text-muted); font-size: 12px; }
 .analytics-page-footer > span { display: inline-flex; align-items: center; gap: 5px; min-width: 0; overflow-wrap: anywhere; }
 .analytics-page-footer > span:last-child { text-align: right; }
-.analytics-updated-dot { flex: none; width: 5px; height: 5px; border-radius: 50%; background: var(--surface-subtle); }
+.analytics-updated-dot { flex: none; width: 6px; height: 6px; border-radius: 50%; background: var(--success); }
 .analytics-page-footer .analytics-stale { color: var(--warning); }
 .analytics-record-dialog { width: min(520px, calc(100vw - 32px)); }
 .analytics-record-dialog-content { padding: 24px; }

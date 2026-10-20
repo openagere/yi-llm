@@ -1,8 +1,8 @@
 .app-shell .proxy-workspace { padding-top: 30px; padding-bottom: 36px; letter-spacing: 0; }
 .proxy-spin { animation: spin 1s linear infinite; }
-.proxy-status-dot, .proxy-nav-dot { flex: none; width: 7px; height: 7px; border-radius: 50%; background: var(--surface-subtle); }
+.proxy-status-dot, .proxy-nav-dot { flex: none; width: 7px; height: 7px; border-radius: 50%; background: var(--text-subtle); }
 .proxy-status-dot.running, .proxy-nav-dot.running { background: var(--success); }
-.proxy-status-dot.starting, .proxy-status-dot.stopping, .proxy-nav-dot.starting, .proxy-nav-dot.stopping { background: var(--surface-subtle); }
+.proxy-status-dot.starting, .proxy-status-dot.stopping, .proxy-nav-dot.starting, .proxy-nav-dot.stopping { background: var(--warning); }
 .proxy-status-dot.error, .proxy-nav-dot.error { background: var(--danger); }
 .proxy-nav-dot { margin-left: auto; }
 .proxy-side-status { border: 0; background: transparent; text-align: left; }

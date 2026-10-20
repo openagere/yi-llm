@@ -1,5 +1,5 @@
-import { useMemo, useState } from "react";
-import { Boxes, Copy, FileText, LoaderCircle, Pencil, Plus, RefreshCw, Search, Trash2, X } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Boxes, Check, Copy, CopyPlus, FileText, LoaderCircle, Pencil, Plus, RefreshCw, Search, Trash2, X } from "lucide-react";
 import "@/styles/models.css";
 import { describeError } from "@/shared/api";
 import { useI18n } from "@/shared/i18n";
@@ -31,6 +31,9 @@ export function ModelListPage() {
   const [page, setPage] = useState(1);
   const [deleting, setDeleting] = useState<StandardModel | null>(null);
   const [error, setError] = useState("");
+  const [copiedPath, setCopiedPath] = useState(false);
+  const copyTimer = useRef<number | undefined>(undefined);
+  useEffect(() => () => window.clearTimeout(copyTimer.current), []);
 
   const visible = useMemo(() => models.filter((model) => (protocol === "all" || model.protocol === protocol)
     && `${model.name} ${PROTOCOLS_BY_ID[model.protocol].name}`.toLowerCase().includes(search.trim().toLowerCase())), [models, search, protocol]);
@@ -46,6 +49,9 @@ export function ModelListPage() {
     if (!catalogInfo) return;
     try {
       await navigator.clipboard.writeText(catalogInfo.path);
+      window.clearTimeout(copyTimer.current);
+      setCopiedPath(true);
+      copyTimer.current = window.setTimeout(() => setCopiedPath(false), 1800);
       notify(t("model.list.catalog.copied"));
     } catch (reason) {
       notify(t("model.list.catalog.copyFailed", { reason: describeError(reason) }), "error");
@@ -70,7 +76,7 @@ export function ModelListPage() {
     <PageHeader eyebrow={t("model.list.eyebrow")} title={t("model.list.title")} subtitle={t("pageDescriptions.models")} actions={
       <button type="button" className="icon-button" title={t("model.list.refresh")} aria-label={t("model.list.refresh")} disabled={loading || removeModel.isPending} onClick={() => void modelsQuery.refetch()}><RefreshCw size={17} className={loading ? "spinning" : ""} /></button>
     } primaryAction={<button type="button" className="outline-action-button" disabled={loading || failed || removeModel.isPending} onClick={() => edit(null)}><Plus size={16} />{t("model.list.addButton")}</button>} />
-    {catalogInfo && <div className="model-catalog-source"><FileText size={15} /><span>{t("model.list.catalog.label")}</span><code title={catalogInfo.path}>{catalogInfo.path}</code><button type="button" className="icon-button" title={t("model.list.catalog.copy")} aria-label={t("model.list.catalog.copy")} onClick={() => void copyCatalogPath()}><Copy size={14} /></button></div>}
+    {catalogInfo && <div className="model-catalog-source"><FileText size={15} /><span>{t("model.list.catalog.label")}</span><code title={catalogInfo.path}>{catalogInfo.path}</code><button type="button" className="icon-button" title={t("model.list.catalog.copy")} aria-label={t("model.list.catalog.copy")} onClick={() => void copyCatalogPath()}>{copiedPath ? <Check size={14} /> : <Copy size={14} />}</button></div>}
     <div className="connection-toolbar">
       <div className="connection-filters" role="group" aria-label={t("model.list.filter.label")}>{[{ id: "all" as const, shortName: t("model.list.filter.all") }, ...PROTOCOLS].map((item) => <button type="button" key={item.id} aria-pressed={protocol === item.id} className={protocol === item.id ? "selected" : ""} onClick={() => { setProtocol(item.id); setPage(1); }}>{item.shortName}<span>{item.id === "all" ? models.length : models.filter((model) => model.protocol === item.id).length}</span></button>)}</div>
       <div className="connection-search"><Search size={15} /><input type="search" aria-label={t("model.list.search.label")} placeholder={t("model.list.search.placeholder")} value={search} onChange={(event) => { setSearch(event.target.value); setPage(1); }} />{search && <button type="button" title={t("model.list.search.clearTitle")} aria-label={t("model.list.search.clearLabel")} onClick={() => { setSearch(""); setPage(1); }}><X size={14} /></button>}</div>
@@ -83,10 +89,10 @@ export function ModelListPage() {
           <div className="standard-model-limits"><span>{model.capabilities.context_window === null ? t("model.list.row.undeclared") : tokenLabel(model.capabilities.context_window)}</span><small>{model.capabilities.max_output_tokens === null ? t("model.list.row.undeclared") : tokenLabel(model.capabilities.max_output_tokens)}</small></div>
           <div className="standard-model-effort"><span>{effortLabel(model)}</span><small>{model.capabilities.effort.support === "supported" ? model.capabilities.effort.levels.join(" · ") : "—"}</small></div>
           <span className="standard-model-refs" title={t("model.list.row.referencesTitle", { count: model.provider_count })}>{model.provider_count}</span>
-          <div className="standard-model-actions"><button type="button" className="icon-button" title={t("model.list.row.edit")} aria-label={t("model.list.row.editLabel", { name: model.name })} onClick={() => edit(model)}><Pencil size={15} /></button><button type="button" className="icon-button" title={t("model.list.row.duplicate")} aria-label={t("model.list.row.duplicateLabel", { name: model.name })} onClick={() => edit(duplicateModel(model, t("model.list.row.duplicateName", { name: model.name })))}><Copy size={15} /></button><button type="button" className="icon-button action-danger" disabled={model.provider_count > 0} title={model.provider_count ? t("model.list.row.removeBlocked") : t("model.list.row.remove")} aria-label={t("model.list.row.removeLabel", { name: model.name })} onClick={() => { setDeleting(model); setError(""); }}><Trash2 size={15} /></button></div>
+          <div className="standard-model-actions"><button type="button" className="icon-button" title={t("model.list.row.edit")} aria-label={t("model.list.row.editLabel", { name: model.name })} onClick={() => edit(model)}><Pencil size={15} /></button><button type="button" className="icon-button" title={t("model.list.row.duplicate")} aria-label={t("model.list.row.duplicateLabel", { name: model.name })} onClick={() => edit(duplicateModel(model, t("model.list.row.duplicateName", { name: model.name })))}><CopyPlus size={15} /></button><button type="button" className="icon-button action-danger" disabled={model.provider_count > 0} title={model.provider_count ? t("model.list.row.removeBlocked") : t("model.list.row.remove")} aria-label={t("model.list.row.removeLabel", { name: model.name })} onClick={() => { setDeleting(model); setError(""); }}><Trash2 size={15} /></button></div>
         </article>)}
       </div>
-      {!visible.length && <div className="connection-empty"><Boxes size={25} /><h2>{models.length ? t("model.list.empty.noMatch") : t("model.list.empty.none")}</h2>{!models.length && <button type="button" className="primary-button" onClick={() => edit(null)}><Plus size={15} />{t("model.list.addButton")}</button>}</div>}
+      {!visible.length && <div className="connection-empty"><Boxes size={25} /><h2>{models.length ? t("model.list.empty.noMatch") : t("model.list.empty.none")}</h2>{!models.length && <p className="connection-empty-hint">{t("pageDescriptions.models")}</p>}</div>}
       <ListPagination page={currentPage} count={visible.length} totalCount={models.length} unit={t("model.list.pagination.unit")} label={t("model.list.pagination.label")} onPage={setPage} disabled={loading || removeModel.isPending} />
     </>}
     {deleting && <ConfirmDialog destructive title={t("model.list.delete.title", { name: deleting.name })} description={t("model.list.delete.description")} confirmLabel={t("model.list.delete.confirm")} busy={removeModel.isPending} error={error} onCancel={() => setDeleting(null)} onConfirm={remove} />}

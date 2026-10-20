@@ -41,7 +41,7 @@ test("non-standard switch sits after the standard model and persists per mapping
   await expect(page.locator(".provider-model-compatibility")).toHaveCount(0);
   await toggle.check();
   await page.screenshot({ path: testInfo.outputPath("provider-non-standard.png") });
-  await page.getByRole("button", { name: "保存修改" }).first().click();
+  await page.getByRole("button", { name: "确定" }).first().click();
   await page.getByRole("button", { name: "OpenAI" }).first().click();
   await expect(page.getByRole("checkbox", { name: "模型 1 非标准兼容" })).toBeChecked();
   await page.setViewportSize({ width: 1120, height: 760 });

@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
-import { AlertTriangle, Check } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { AlertTriangle, Check, Copy } from "lucide-react";
 import { type ProviderView } from "@/features/providers";
 import { describeError } from "@/shared/api";
 import { useI18n } from "@/shared/i18n";
@@ -127,6 +127,21 @@ export function DirectTerminalSection({ client, profile, disabled, controller }:
     applyError,
   } = controller;
   const clientName = terminalName(client);
+  const [copied, setCopied] = useState(false);
+  const copyTimer = useRef<number | undefined>(undefined);
+  useEffect(() => () => window.clearTimeout(copyTimer.current), []);
+
+  async function copyPreview() {
+    if (!currentFile) return;
+    try {
+      await navigator.clipboard.writeText(currentFile.content);
+      window.clearTimeout(copyTimer.current);
+      setCopied(true);
+      copyTimer.current = window.setTimeout(() => setCopied(false), 1800);
+    } catch {
+      /* Clipboard unavailable. */
+    }
+  }
 
   return (
     <div className="terminal-layout terminal-direct-layout">
@@ -250,6 +265,16 @@ export function DirectTerminalSection({ client, profile, disabled, controller }:
             <h2>{t("terminal.preview.heading")}</h2>
             <p>{t("terminal.direct.previewHint")}</p>
           </div>
+          <button
+            type="button"
+            className="icon-button copy-config"
+            onClick={() => void copyPreview()}
+            title={t("terminal.preview.copyTitle")}
+            aria-label={t("terminal.preview.copyLabel")}
+            disabled={!currentFile || preview.pending}
+          >
+            {copied ? <Check size={16} /> : <Copy size={16} />}
+          </button>
         </div>
         {preview.preview && preview.preview.files.length > 1 && (
           <div className="terminal-file-tabs" role="group" aria-label={t("terminal.preview.filesLabel")}>

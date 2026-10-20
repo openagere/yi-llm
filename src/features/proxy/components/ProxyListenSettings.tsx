@@ -4,6 +4,7 @@ import { describeError } from "@/shared/api";
 import { useI18n } from "@/shared/i18n";
 import { proxyBaseUrl } from "@/shared/lib";
 import { notify } from "@/shared/notify";
+import { Select } from "@/shared/ui";
 import { useProxySettings, useSaveProxySettings } from "../hooks";
 import type { ServerSettings } from "../types";
 
@@ -57,7 +58,7 @@ export function ProxyListenSettings() {
       <fieldset disabled={busy || saved === null} className="connection-form-fields form-grid settings-grid">
         <label className="field"><span>{t("proxy.listen.host")}</span><input value={settings.host} onChange={(event) => update({ host: event.target.value })} placeholder="127.0.0.1" /></label>
         <label className="field"><span>{t("proxy.listen.port")}</span><input type="number" min={1} max={65535} value={settings.port} onChange={(event) => update({ port: Number(event.target.value) })} /></label>
-        <label className="field"><span>{t("proxy.listen.logLevel")}</span><select value={settings.log_level} onChange={(event) => update({ log_level: event.target.value as ServerSettings["log_level"] })}>{LOG_LEVELS.map((level) => <option key={level} value={level}>{level}</option>)}</select></label>
+        <div className="field"><span>{t("proxy.listen.logLevel")}</span><Select label={t("proxy.listen.logLevel")} value={settings.log_level} disabled={busy || saved === null} onValueChange={(value) => update({ log_level: value as ServerSettings["log_level"] })} options={LOG_LEVELS.map((level) => ({ value: level, label: level }))} /></div>
       </fieldset>
       <p className="settings-note">{t("proxy.listen.note")}</p>
       <div className="settings-actions"><span className={`form-message ${save.isSuccess ? "success" : ""}`} role="status">{status}</span></div>

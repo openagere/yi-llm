@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Check, Clipboard, Link2 } from "lucide-react";
+import { Check, Copy, Link2 } from "lucide-react";
 import { useProviders } from "@/features/providers";
 import { useI18n } from "@/shared/i18n";
 import { PROTOCOLS, proxyOrigin } from "@/shared/lib";
@@ -33,7 +33,7 @@ export function ProxyConnections({ settings }: { settings: ServerSettings }) {
 
   function address(url: string, label: string) {
     const copyLabel = t("proxy.connections.copy", { label });
-    return <div className="proxy-url-value"><code>{url}</code><button type="button" className="icon-button proxy-copy" title={copied === label ? t("proxy.connections.copied") : copyLabel} aria-label={copyLabel} onClick={() => void copy(url, label)}>{copied === label ? <Check size={15} /> : <Clipboard size={15} />}</button></div>;
+    return <div className="proxy-url-value"><code>{url}</code><button type="button" className="icon-button proxy-copy" title={copied === label ? t("proxy.connections.copied") : copyLabel} aria-label={copyLabel} onClick={() => void copy(url, label)}>{copied === label ? <Check size={15} /> : <Copy size={15} />}</button></div>;
   }
 
   return <section className="proxy-connections" aria-label={t("proxy.connections.title")}>

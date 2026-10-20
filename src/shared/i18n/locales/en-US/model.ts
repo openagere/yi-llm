@@ -86,7 +86,7 @@ const model: DeepString<typeof zh> = {
       delete: {
         title: "Delete \u2018{name}\u2019?",
         description: "This action can't be undone.",
-        confirm: "Delete model",
+        confirm: "Confirm",
         done: "{name} deleted",
       },
     },
@@ -95,7 +95,7 @@ const model: DeepString<typeof zh> = {
       titleEdit: "Edit model",
       titleAdd: "Add model",
       back: "Back to model management",
-      save: "Save model",
+      save: "Confirm",
       saving: "Saving…",
       saved: "{name} saved",
       saveFailed: "Failed to save model: {reason}",

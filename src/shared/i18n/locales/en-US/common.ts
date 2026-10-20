@@ -38,7 +38,7 @@ const common: DeepString<typeof zh> = {
     discard: {
       title: "Discard unsaved changes?",
       description: "Your unsaved changes will be discarded. This can't be undone.",
-      confirm: "Discard changes",
+      confirm: "Confirm",
     },
   },
   pageDescriptions: {

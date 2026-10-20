@@ -1,4 +1,4 @@
-import { Image } from "lucide-react";
+import { Sparkles } from "lucide-react";
 import { useI18n } from "@/shared/i18n";
 import { MODALITIES } from "../capabilities";
 import { MODALITY_FIELDS } from "../draft";
@@ -10,7 +10,7 @@ export function ModalitiesSection({ form }: { form: ModelForm }) {
   const { draft, errors, declareModalities, toggleModality } = form;
   const caps = draft.capabilities;
   return <section className="connection-form-section">
-    <div className="connection-section-title"><Image size={17} /><h2>{t("model.editor.modalities.title")}</h2></div>
+    <div className="connection-section-title"><Sparkles size={17} /><h2>{t("model.editor.modalities.title")}</h2></div>
     <div className="standard-model-modalities">{MODALITY_FIELDS.map((field) => {
       const values = caps[field];
       const input = field === "input_modalities";

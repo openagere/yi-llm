@@ -2,12 +2,13 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   AlertTriangle,
   ArrowUpRight,
+  Cable,
   Check,
   ChevronDown,
   ChevronRight,
   ChevronsDownUp,
   ChevronsUpDown,
-  Clipboard,
+  Copy,
   LoaderCircle,
   Network,
   Search,
@@ -213,7 +214,7 @@ export function TerminalPage() {
           }}
         >
           {(["proxy", "direct"] as const).map((mode) => {
-            const Icon = mode === "proxy" ? Network : ArrowUpRight;
+            const Icon = mode === "proxy" ? Network : Cable;
             const pending = mode === "proxy" ? changedClients.has(client) : directChanged;
             return (
               <button
@@ -568,7 +569,7 @@ export function TerminalPage() {
                   aria-label={t("terminal.preview.copyLabel")}
                   disabled={!previewFile || preview.pending}
                 >
-                  {copied ? <Check size={16} /> : <Clipboard size={16} />}
+                  {copied ? <Check size={16} /> : <Copy size={16} />}
                 </button>
               </div>
               {preview.preview && preview.preview.files.length > 1 && (

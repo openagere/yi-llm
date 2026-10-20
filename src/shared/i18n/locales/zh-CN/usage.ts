@@ -40,7 +40,7 @@ const usage = {
       editCustom: "修改自定义日期",
       startDate: "开始日期",
       endDate: "结束日期",
-      apply: "应用",
+      apply: "确定",
       cancel: "取消日期修改",
       errors: {
         invalid: "请选择有效的开始日期和结束日期",

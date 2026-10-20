@@ -42,7 +42,7 @@ const usage: DeepString<typeof zh> = {
       editCustom: "Edit custom dates",
       startDate: "Start date",
       endDate: "End date",
-      apply: "Apply",
+      apply: "Confirm",
       cancel: "Cancel date changes",
       errors: {
         invalid: "Select a valid start and end date",

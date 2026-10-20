@@ -83,7 +83,7 @@ const model = {
       delete: {
         title: "删除「{name}」？",
         description: "此操作无法撤销。",
-        confirm: "删除模型",
+        confirm: "确定",
         done: "{name} 已删除",
       },
     },
@@ -92,7 +92,7 @@ const model = {
       titleEdit: "编辑模型",
       titleAdd: "添加模型",
       back: "返回模型管理",
-      save: "保存模型",
+      save: "确定",
       saving: "保存中…",
       saved: "{name} 已保存",
       saveFailed: "保存模型失败：{reason}",

@@ -1,5 +1,5 @@
 import { lazy, Suspense, useState } from "react";
-import { Activity, ArrowRight, CircleAlert, LoaderCircle, Play, RotateCw, Settings2, Square, Workflow, X } from "lucide-react";
+import { Activity, ArrowRight, CircleAlert, LoaderCircle, Play, RefreshCw, RotateCw, Settings2, Square, Workflow, X } from "lucide-react";
 import "@/styles/proxy.css";
 import { describeError } from "@/shared/api";
 import { useProviders } from "@/features/providers";
@@ -41,7 +41,7 @@ export function ProxyPage({ active }: { active: boolean }) {
 
   return <section className="proxy-page proxy-workspace">
     <PageHeader navigationInToolbar eyebrow={t("proxy.eyebrow")} title={t("proxy.title")} subtitle={t("pageDescriptions.proxy")} onBack={back} backLabel={t("common.back")} actions={<>
-      <button type="button" className="icon-button" title={t("proxy.refresh")} aria-label={t("proxy.refresh")} disabled={refreshing} onClick={() => void runtimeQuery.refetch()}><RotateCw size={16} className={refreshing ? "proxy-spin" : ""} /></button>
+      <button type="button" className="icon-button" title={t("proxy.refresh")} aria-label={t("proxy.refresh")} disabled={refreshing} onClick={() => void runtimeQuery.refetch()}><RefreshCw size={16} className={refreshing ? "proxy-spin" : ""} /></button>
       <button type="button" className="icon-button" title={t("proxy.alerts.checkSettings")} aria-label={t("proxy.alerts.checkSettings")} onClick={openListenSettings}><Settings2 size={17} /></button>
     </>} />
     <section className="proxy-runtime" aria-label={t("proxy.title")}>
@@ -86,7 +86,7 @@ export function ProxyPage({ active }: { active: boolean }) {
     <div id="proxy-logs-panel" role="tabpanel" aria-labelledby="proxy-logs-tab" hidden={view !== "logs"}>
       <Suspense fallback={<div className="proxy-loading">{t("proxy.logs.loading")}</div>}><ProxyLogs visible={active && view === "logs"} /></Suspense>
     </div>
-    <dialog className="app-dialog proxy-listen-dialog" id="proxy-listen-options" aria-label={t("proxy.listen.heading")}>
+    <dialog className="app-dialog proxy-listen-dialog" id="proxy-listen-options" aria-label={t("proxy.listen.heading")} onClick={(event) => { if (event.target === event.currentTarget) event.currentTarget.close(); }}>
       <button type="button" className="icon-button proxy-listen-close" title={t("proxy.closeSettings")} aria-label={t("proxy.closeSettings")} onClick={() => (document.getElementById("proxy-listen-options") as HTMLDialogElement | null)?.close()}><X size={16} /></button>
       <ProxyListenSettings />
     </dialog>
