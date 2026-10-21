@@ -48,7 +48,7 @@ export function Sidebar() {
   }
 
   return <aside className="sidebar" id="workspace-sidebar" aria-label={t("nav.workspace")}>
-    <div className="brand"><AppLogo alt="" /></div>
+    <div className="brand"><AppLogo alt="Yi Token" wordmark /></div>
     <div className="sidebar-search">
       <Search size={16} aria-hidden="true" />
       <input type="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder={t("nav.search")} aria-label={t("nav.search")} />

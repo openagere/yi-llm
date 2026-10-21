@@ -314,8 +314,10 @@ for (const theme of ["light", "dark"] as const) {
     await expect(toolbar).not.toContainText("连接");
     await expect(toolbar).not.toContainText("LLM Man");
     await expect(page.locator(".sidebar")).not.toContainText("LLM Man");
+    await expect(page.locator(".sidebar .app-logo")).toHaveAccessibleName("Yi Token");
+    await expect(page.locator(".sidebar .app-logo-wordmark")).toBeVisible();
     await expect(page).toHaveTitle("工作区");
-    const marks = page.locator(".app-logo > svg");
+    const marks = page.locator(".app-logo-mark > svg");
     await expect(marks).toHaveCount(1);
     await expect(toolbar.locator(".app-logo")).toHaveCount(0);
     const sourcePath = await page.evaluate(async () => {
@@ -328,7 +330,7 @@ for (const theme of ["light", "dark"] as const) {
       expect(colors.fill).toBe(colors.color);
       expect(colors.dot).toBe("rgb(0, 255, 37)");
     }
-    expect((await page.locator(".brand .app-logo > svg").boundingBox())!.width).toBe(24);
+    expect((await page.locator(".brand .app-logo-mark > svg").boundingBox())!.width).toBe(28);
     await page.screenshot({ path: testInfo.outputPath("yi-branding.png") });
     await page.locator(".sidebar").getByRole("button", { name: "模型管理", exact: true }).click();
     await page.getByRole("button", { name: "添加模型", exact: true }).click();

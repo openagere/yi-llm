@@ -25,11 +25,12 @@ html[data-platform="macos"] .workspace-toolbar { padding-left: 78px; }
 .workspace-toolbar .icon-button:disabled { opacity: .3; }
 .theme-icon-light, [data-theme="dark"] .theme-icon-dark { display: none; }
 [data-theme="dark"] .theme-icon-light { display: block; }
-.sidebar { grid-column: 1; grid-row: 1; position: relative; top: auto; display: flex; flex-direction: column; width: auto; height: 100%; min-height: 0; padding: 8px 9px 12px; border: 0; background: var(--sidebar-bg); overflow-y: auto; }
-.brand { display: flex; align-items: center; gap: 10px; min-height: 32px; padding: 0 9px; margin-bottom: 8px; border: 0; border-radius: 0; background: transparent; }
-.app-logo { display: block; flex: none; width: 100%; height: 100%; color: var(--text-primary); }
-.app-logo > svg { display: block; width: 100%; height: 100%; }
-.brand > .app-logo { display: block; flex: none; width: 24px; height: 24px; object-fit: contain; }
+.sidebar { grid-column: 1; grid-row: 1; position: relative; top: auto; display: flex; flex-direction: column; width: auto; height: 100%; min-height: 0; padding: 10px 9px 12px; border: 0; background: var(--sidebar-bg); overflow-y: auto; }
+.brand { display: flex; align-items: center; min-height: 40px; padding: 0 8px; margin-bottom: 12px; border: 0; border-radius: 0; background: transparent; user-select: none; }
+.app-logo { display: inline-flex; flex: none; align-items: center; gap: 9px; color: var(--text-primary); }
+.app-logo-mark { display: block; flex: none; width: 28px; height: 28px; }
+.app-logo-mark > svg { display: block; width: 100%; height: 100%; }
+.app-logo-wordmark { display: block; flex: none; width: auto; height: 24px; overflow: visible; }
 .sidebar-search { display: flex; align-items: center; gap: 9px; min-height: 30px; margin: 0 3px 15px; padding: 0 11px; border-radius: 20px; color: var(--text-muted); background: var(--surface-selected); }
 .sidebar-search input { width: 100%; min-width: 0; padding: 0; border: 0; color: var(--text-primary); background: transparent; font-size: 12px; outline: none; }
 .sidebar-search:focus-within { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
@@ -69,7 +70,7 @@ html[data-platform="macos"] .workspace-toolbar { padding-left: 78px; }
 .sidebar-collapsed { --sidebar-width: 66px; }
 .sidebar-collapsed .sidebar { padding-right: 10px; padding-left: 10px; }
 .sidebar-collapsed .brand { justify-content: center; padding: 0; }
-.sidebar-collapsed :is(.sidebar-search, .side-section-label, .provider-nav-name, .nav-count, .proxy-nav-dot, .side-footer > span:last-child) { display: none; }
+.sidebar-collapsed :is(.app-logo-wordmark, .sidebar-search, .side-section-label, .provider-nav-name, .nav-count, .proxy-nav-dot, .side-footer > span:last-child) { display: none; }
 .sidebar-collapsed .provider-nav { justify-content: center; padding: 0; min-height: 40px; }
 .sidebar-collapsed .side-footer { justify-content: center; padding: 0; }
 .sidebar-collapsed .primary-nav { padding-top: 10px; }
