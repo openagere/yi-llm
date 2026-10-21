@@ -19,6 +19,9 @@ where
         let mut tool_output: HashMap<usize, usize> = HashMap::new();
         let mut next_output = 0usize;
         let mut finished = false;
+        // Chat streams send `finish_reason` before the usage-only chunk that
+        // `include_usage` adds, so completion waits for `[DONE]` or end of stream.
+        let mut finish_reason: Option<&'static str> = None;
         while let Some(Ok(bytes)) = stream.next().await {
             pending.push_str(&String::from_utf8_lossy(&bytes));
             if pending.contains("\r\n") { pending = pending.replace("\r\n", "\n"); }
@@ -27,7 +30,7 @@ where
                 pending.drain(..end + 2);
                 for line in frame.lines().filter_map(|line| line.strip_prefix("data:")) {
                     let data = line.trim();
-                    if data == "[DONE]" { finished = true; yield UpstreamEvent::Done { reason: "stop".into() }; break; }
+                    if data == "[DONE]" { finished = true; yield UpstreamEvent::Done { reason: finish_reason.unwrap_or("stop").into() }; break; }
                     let Ok(chunk) = serde_json::from_str::<ChatChunk>(data) else { continue };
                     let mut done_reason = None;
                     for choice in chunk.choices {
@@ -71,15 +74,17 @@ where
                         indices.sort_unstable();
                         indices.dedup();
                         for index in indices { yield UpstreamEvent::ItemStop { index }; }
-                        finished = true;
-                        yield UpstreamEvent::Done { reason: reason.into() };
+                        finish_reason = Some(reason);
                     }
                 }
                 if finished { break; }
             }
             if finished { break; }
         }
-        if !finished { yield UpstreamEvent::RawError { message: "上游 SSE 流意外结束".into() }; }
+        if !finished {
+            if let Some(reason) = finish_reason { yield UpstreamEvent::Done { reason: reason.into() }; }
+            else { yield UpstreamEvent::RawError { message: "上游 SSE 流意外结束".into() }; }
+        }
     }
 }
 
@@ -120,5 +125,33 @@ mod tests {
         assert!(events
             .iter()
             .any(|e| matches!(e, UpstreamEvent::Done { .. })));
+    }
+
+    #[test]
+    fn usage_chunk_after_finish_reason_is_read_before_done() {
+        let fixture = concat!(
+            "data: {\"choices\":[{\"index\":0,\"delta\":{\"content\":\"answer\"}}]}\n\n",
+            "data: {\"choices\":[{\"index\":0,\"delta\":{},\"finish_reason\":\"tool_calls\"}],\"usage\":null}\n\n",
+            "data: {\"choices\":[],\"usage\":{\"prompt_tokens\":3,\"completion_tokens\":2,\"total_tokens\":5}}\n\n",
+            "data: [DONE]\n\n"
+        );
+        let events = collect(fixture);
+        let usage = events
+            .iter()
+            .position(|e| {
+                matches!(
+                    e,
+                    UpstreamEvent::Usage {
+                        input_tokens: Some(3),
+                        ..
+                    }
+                )
+            })
+            .expect("usage event");
+        let done = events
+            .iter()
+            .position(|e| matches!(e, UpstreamEvent::Done { reason } if reason == "tool_calls"))
+            .expect("done event");
+        assert!(usage < done);
     }
 }

@@ -44,7 +44,7 @@ pub fn build_request(
         if pending_calls.is_empty() && pending_reasoning.is_empty() {
             return;
         }
-        let reasoning = pending_reasoning.join("\n");
+        let reasoning = std::mem::take(pending_reasoning).join("\n");
         messages.push(ChatMessage {
             role: "assistant".into(),
             // Strict OpenAI-compatible upstreams (Qwen / DashScope compatible mode
@@ -417,6 +417,23 @@ mod tests {
             .find(|m| m.role == "assistant")
             .expect("assistant message");
         assert_eq!(assistant.tool_calls.as_ref().unwrap().len(), 2);
+    }
+
+    #[test]
+    fn reasoning_before_parallel_calls_does_not_split_tool_messages() {
+        let input = serde_json::json!([
+            {"type": "message", "role": "user", "content": [{"type": "input_text", "text": "run"}]},
+            {"type": "reasoning", "id": "rs", "summary": [{"type": "summary_text", "text": "think"}]},
+            {"type": "function_call", "call_id": "call_1", "name": "shell", "arguments": "{}"},
+            {"type": "function_call", "call_id": "call_2", "name": "shell", "arguments": "{}"},
+            {"type": "function_call_output", "call_id": "call_1", "output": "a"},
+            {"type": "function_call_output", "call_id": "call_2", "output": "b"}
+        ]);
+        let req = req_from_input(input);
+        let out = build_request(&req, &provider(), "gpt-5").unwrap();
+        let roles: Vec<&str> = out.messages.iter().map(|m| m.role.as_str()).collect();
+        assert_eq!(roles, ["system", "user", "assistant", "tool", "tool"]);
+        assert_eq!(out.messages[2].reasoning_content.as_deref(), Some("think"));
     }
 
     #[test]
