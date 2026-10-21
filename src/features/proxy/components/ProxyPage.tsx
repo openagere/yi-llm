@@ -1,5 +1,5 @@
 import { lazy, Suspense, useState } from "react";
-import { Activity, ArrowRight, CircleAlert, LoaderCircle, Play, RefreshCw, RotateCw, Settings2, Square, Workflow, X } from "lucide-react";
+import { Activity, ArrowRight, CircleAlert, LoaderCircle, RefreshCw, RotateCw, Settings2, Workflow, X } from "lucide-react";
 import "@/styles/proxy.css";
 import { describeError } from "@/shared/api";
 import { useProviders } from "@/features/providers";
@@ -51,7 +51,7 @@ export function ProxyPage({ active }: { active: boolean }) {
         <div className="proxy-runtime-actions">
           {running && <button type="button" className="icon-button" title={t("proxy.restart")} aria-label={t("proxy.restart")} disabled={!!busy || transitioning} onClick={() => control("restart")}><RotateCw size={16} /></button>}
           <button type="button" className={running ? "secondary-button" : "primary-button"} disabled={!!busy || transitioning || !runtime || !!error} onClick={() => control(running ? "stop" : "start")}>
-            {busy || transitioning ? <LoaderCircle size={15} className="proxy-spin" /> : running ? <Square size={13} /> : <Play size={15} />}
+            {(busy || transitioning) && <LoaderCircle size={15} className="proxy-spin" />}
             {phase === "stopping" ? t("proxy.stopping") : phase === "starting" ? t("proxy.starting") : running ? t("proxy.stop") : t("proxy.start")}
           </button>
         </div>

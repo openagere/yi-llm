@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { LoaderCircle, Save } from "lucide-react";
+import { LoaderCircle } from "lucide-react";
 import { describeError } from "@/shared/api";
 import { useI18n } from "@/shared/i18n";
 import { proxyBaseUrl } from "@/shared/lib";
@@ -50,7 +50,7 @@ export function ProxyListenSettings() {
           <p>{t("proxy.listen.description")}</p>
         </div>
         <button type="button" className="secondary-button" disabled={busy || !dirty} onClick={submit}>
-          {busy ? <LoaderCircle size={15} className="spinning" /> : <Save size={15} />}
+          {busy && <LoaderCircle size={15} className="spinning" />}
           {busy ? t("common.saving") : t("proxy.listen.save")}
         </button>
       </div>

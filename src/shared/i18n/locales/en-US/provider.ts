@@ -10,6 +10,8 @@ const provider: DeepString<typeof zh> = {
       transfer: {
         import: "Import configuration",
         export: "Export configuration",
+        importShort: "Import",
+        exportShort: "Export",
         importTitle: "Import provider configuration",
         exportTitle: "Export provider configuration",
         importDescription: "Pick an exported file and enter the passphrase it was created with. Providers and models from the file are merged in, existing local standard models are kept, and other connections stay untouched.",

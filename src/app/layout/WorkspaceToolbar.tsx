@@ -7,7 +7,6 @@ import { detectPlatform } from "@/shared/lib";
 import { useNavigationStore } from "@/shared/navigation";
 import { notify } from "@/shared/notify";
 import { useSettings } from "@/shared/settings";
-import { AppLogo } from "@/shared/ui";
 
 export function WorkspaceToolbar() {
   const { t } = useI18n();
@@ -55,7 +54,6 @@ export function WorkspaceToolbar() {
     onMouseDown={event => { if (event.button === 0 && event.detail === 1 && !interactive(event)) void control("drag"); }}
     onDoubleClick={event => { if (event.button === 0 && !interactive(event)) void control("maximize"); }}>
     <div className="workspace-toolbar-navigation">
-      <span className="titlebar-logo-slot"><AppLogo className="titlebar-logo" alt="" /></span>
       <button type="button" className="icon-button" data-window-interactive title={t("nav.toggleSidebar")} aria-label={t("nav.toggleSidebar")} aria-controls="workspace-sidebar" aria-expanded={!collapsed} onClick={toggleSidebar}><PanelLeft size={15} /></button>
     </div>
     <div className="titlebar-caption" data-titlebar-drag-region />

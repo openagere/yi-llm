@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   AlertTriangle,
-  ArrowUpRight,
   Cable,
   Check,
   ChevronDown,
@@ -320,11 +319,7 @@ export function TerminalPage() {
               onClick={directController.applyConfig}
               disabled={!directController.readyToApply || directController.busy}
             >
-              {directController.busy ? (
-                <LoaderCircle size={15} className="spinning" />
-              ) : (
-                <ArrowUpRight size={15} />
-              )}
+              {directController.busy && <LoaderCircle size={15} className="spinning" />}
               {directController.busy ? t("terminal.direct.applying") : t("terminal.direct.apply")}
             </button>
           ) : (
@@ -341,7 +336,7 @@ export function TerminalPage() {
                 Boolean(preview.error)
               }
             >
-              {busy ? <LoaderCircle size={15} className="spinning" /> : <ArrowUpRight size={15} />}
+              {busy && <LoaderCircle size={15} className="spinning" />}
               {busy
                 ? t("terminal.actions.applying")
                 : status?.active_mode === "proxy"

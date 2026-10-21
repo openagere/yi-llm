@@ -316,7 +316,8 @@ for (const theme of ["light", "dark"] as const) {
     await expect(page.locator(".sidebar")).not.toContainText("LLM Man");
     await expect(page).toHaveTitle("工作区");
     const marks = page.locator(".app-logo > svg");
-    await expect(marks).toHaveCount(2);
+    await expect(marks).toHaveCount(1);
+    await expect(toolbar.locator(".app-logo")).toHaveCount(0);
     const sourcePath = await page.evaluate(async () => {
       const source = await fetch("/src/assets/providers/yi.svg").then(response => response.text());
       return new DOMParser().parseFromString(source, "image/svg+xml").querySelector("path")!.getAttribute("d");
@@ -327,10 +328,6 @@ for (const theme of ["light", "dark"] as const) {
       expect(colors.fill).toBe(colors.color);
       expect(colors.dot).toBe("rgb(0, 255, 37)");
     }
-    const bounds = await toolbar.locator(".titlebar-logo-slot").boundingBox();
-    expect(bounds!.x).toBe(10);
-    expect(bounds!.width).toBe(28);
-    expect((await toolbar.locator(".titlebar-logo > svg").boundingBox())!.width).toBe(18);
     expect((await page.locator(".brand .app-logo > svg").boundingBox())!.width).toBe(24);
     await page.screenshot({ path: testInfo.outputPath("yi-branding.png") });
     await page.locator(".sidebar").getByRole("button", { name: "模型管理", exact: true }).click();
@@ -363,11 +360,11 @@ test("terminal management switches between the unchanged proxy profile and direc
   await page.getByRole("button", { name: "收起全部 Provider" }).click();
   await expect(modelGroups.first()).toHaveAttribute("aria-expanded", "false");
   const proxyAction = page.locator(".terminal-header-action").getByRole("button", { name: "更新配置" });
-  await expect(proxyAction.locator("svg.lucide-arrow-up-right")).toHaveCount(1);
+  await expect(proxyAction).toBeVisible();
   const proxyActionBounds = await proxyAction.boundingBox();
   await page.getByRole("tab", { name: "直连接入" }).click();
   const directAction = page.locator(".terminal-header-action").getByRole("button", { name: "应用直连配置" });
-  await expect(directAction.locator("svg.lucide-arrow-up-right")).toHaveCount(1);
+  await expect(directAction).toBeVisible();
   const directActionBounds = await directAction.boundingBox();
   expect(directActionBounds!.y).toBe(proxyActionBounds!.y);
   expect(directActionBounds!.x + directActionBounds!.width).toBe(proxyActionBounds!.x + proxyActionBounds!.width);

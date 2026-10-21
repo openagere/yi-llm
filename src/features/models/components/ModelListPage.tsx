@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Boxes, Check, Copy, CopyPlus, FileText, LoaderCircle, Pencil, Plus, RefreshCw, Search, Trash2, X } from "lucide-react";
+import { Boxes, Check, Copy, CopyPlus, FileText, LoaderCircle, Pencil, RefreshCw, Search, Trash2, X } from "lucide-react";
 import "@/styles/models.css";
 import { describeError } from "@/shared/api";
 import { useI18n } from "@/shared/i18n";
@@ -75,13 +75,13 @@ export function ModelListPage() {
   return <section className="provider-list-page model-list-page">
     <PageHeader eyebrow={t("model.list.eyebrow")} title={t("model.list.title")} subtitle={t("pageDescriptions.models")} actions={
       <button type="button" className="icon-button" title={t("model.list.refresh")} aria-label={t("model.list.refresh")} disabled={loading || removeModel.isPending} onClick={() => void modelsQuery.refetch()}><RefreshCw size={17} className={loading ? "spinning" : ""} /></button>
-    } primaryAction={<button type="button" className="outline-action-button" disabled={loading || failed || removeModel.isPending} onClick={() => edit(null)}><Plus size={16} />{t("model.list.addButton")}</button>} />
+    } primaryAction={<button type="button" className="outline-action-button" disabled={loading || failed || removeModel.isPending} onClick={() => edit(null)}>{t("model.list.addButton")}</button>} />
     {catalogInfo && <div className="model-catalog-source"><FileText size={15} /><span>{t("model.list.catalog.label")}</span><code title={catalogInfo.path}>{catalogInfo.path}</code><button type="button" className="icon-button" title={t("model.list.catalog.copy")} aria-label={t("model.list.catalog.copy")} onClick={() => void copyCatalogPath()}>{copiedPath ? <Check size={14} /> : <Copy size={14} />}</button></div>}
     <div className="connection-toolbar">
       <div className="connection-filters" role="group" aria-label={t("model.list.filter.label")}>{[{ id: "all" as const, shortName: t("model.list.filter.all") }, ...PROTOCOLS].map((item) => <button type="button" key={item.id} aria-pressed={protocol === item.id} className={protocol === item.id ? "selected" : ""} onClick={() => { setProtocol(item.id); setPage(1); }}>{item.shortName}<span>{item.id === "all" ? models.length : models.filter((model) => model.protocol === item.id).length}</span></button>)}</div>
       <div className="connection-search"><Search size={15} /><input type="search" aria-label={t("model.list.search.label")} placeholder={t("model.list.search.placeholder")} value={search} onChange={(event) => { setSearch(event.target.value); setPage(1); }} />{search && <button type="button" title={t("model.list.search.clearTitle")} aria-label={t("model.list.search.clearLabel")} onClick={() => { setSearch(""); setPage(1); }}><X size={14} /></button>}</div>
     </div>
-    {loading ? <div className="connection-empty" role="status"><LoaderCircle className="spinning" size={24} />{t("model.list.loading")}</div> : failed ? <div className="connection-empty" role="alert"><h2>{t("model.list.failedTitle")}</h2><button type="button" className="secondary-button" onClick={() => void modelsQuery.refetch()}><RefreshCw size={15} />{t("common.retry")}</button></div> : <>
+    {loading ? <div className="connection-empty" role="status"><LoaderCircle className="spinning" size={24} />{t("model.list.loading")}</div> : failed ? <div className="connection-empty" role="alert"><h2>{t("model.list.failedTitle")}</h2><button type="button" className="secondary-button" onClick={() => void modelsQuery.refetch()}>{t("common.retry")}</button></div> : <>
       <div className="standard-model-table">
         <div className="standard-model-head"><span>{t("model.list.columns.model")}</span><span>{t("model.list.columns.limits")}</span><span>Reasoning Effort</span><span>{t("model.list.columns.references")}</span><span>{t("model.list.columns.actions")}</span></div>
         {pageItems.map((model) => <article className="standard-model-row" key={model.id}>

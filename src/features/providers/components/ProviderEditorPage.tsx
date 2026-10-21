@@ -1,5 +1,5 @@
 import { useMemo, useRef, useState } from "react";
-import { ArrowRightLeft, Boxes, Cable, Check, Cpu, Eye, EyeOff, FlaskConical, LoaderCircle, Play, Plus, SlidersHorizontal, Trash2 } from "lucide-react";
+import { ArrowRightLeft, Boxes, Cable, Check, Cpu, Eye, EyeOff, FlaskConical, LoaderCircle, Plus, SlidersHorizontal, Trash2 } from "lucide-react";
 import { describeError } from "@/shared/api";
 import { useStandardModels, ModelCapabilitySummary, tokenLabel, type StandardModel } from "@/features/models";
 import { useI18n, type Translate } from "@/shared/i18n";
@@ -181,7 +181,7 @@ function ProviderEditorForm({ provider, providers, standardModels }: { provider:
           </section>
           <section className="connection-form-section connection-test-section">
             <div className="connection-section-title"><FlaskConical size={17} /><h2>{t("provider.editor.test.title")}</h2></div>
-            <div className="connection-test-controls"><label className="field"><span>{t("provider.editor.test.model")}<small className="optional-label">{cleanModels()[0]?.name ? t("provider.editor.optional") : t("provider.editor.required")}</small></span><input name="test_model" aria-invalid={Boolean(fieldErrors.test_model)} value={testModel} onChange={(event) => { setTestModel(event.target.value); setFieldErrors((current) => ({ ...current, test_model: "" })); }} placeholder={cleanModels()[0]?.name || t("provider.editor.test.modelPlaceholder")} spellCheck={false} /></label><button type="button" className="secondary-button" onClick={() => void testConnection()}>{busy === "test" ? <LoaderCircle size={16} className="spinning" /> : <Play size={15} />}{busy === "test" ? t("provider.editor.test.testing") : t("provider.editor.test.action")}</button></div>
+            <div className="connection-test-controls"><label className="field"><span>{t("provider.editor.test.model")}<small className="optional-label">{cleanModels()[0]?.name ? t("provider.editor.optional") : t("provider.editor.required")}</small></span><input name="test_model" aria-invalid={Boolean(fieldErrors.test_model)} value={testModel} onChange={(event) => { setTestModel(event.target.value); setFieldErrors((current) => ({ ...current, test_model: "" })); }} placeholder={cleanModels()[0]?.name || t("provider.editor.test.modelPlaceholder")} spellCheck={false} /></label><button type="button" className="secondary-button" onClick={() => void testConnection()}>{busy === "test" && <LoaderCircle size={16} className="spinning" />}{busy === "test" ? t("provider.editor.test.testing") : t("provider.editor.test.action")}</button></div>
             {fieldErrors.test_model && <small className="field-error">{fieldErrors.test_model}</small>}
           </section>
           <details className="connection-advanced" open={fieldErrors.extra ? true : undefined}><summary><SlidersHorizontal size={16} /><span>{t("provider.editor.advanced")}</span></summary><div className="connection-advanced-content">

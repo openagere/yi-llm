@@ -18,8 +18,8 @@ export function ProviderConfigTransfer({ disabled }: { disabled: boolean }) {
   const { t } = useI18n();
   const [mode, setMode] = useState<TransferMode | null>(null);
   return <>
-    <button type="button" className="icon-button transfer-action" title={t("provider.list.transfer.import")} aria-label={t("provider.list.transfer.import")} disabled={disabled} onClick={() => setMode("import")}><Upload size={16} strokeWidth={1.9} aria-hidden="true" /></button>
-    <button type="button" className="icon-button transfer-action" title={t("provider.list.transfer.export")} aria-label={t("provider.list.transfer.export")} disabled={disabled} onClick={() => setMode("export")}><Download size={16} strokeWidth={1.9} aria-hidden="true" /></button>
+    <button type="button" className="secondary-button transfer-action" title={t("provider.list.transfer.import")} aria-label={t("provider.list.transfer.import")} disabled={disabled} onClick={() => setMode("import")}><Upload size={14} aria-hidden="true" /><span>{t("provider.list.transfer.importShort")}</span></button>
+    <button type="button" className="secondary-button transfer-action" title={t("provider.list.transfer.export")} aria-label={t("provider.list.transfer.export")} disabled={disabled} onClick={() => setMode("export")}><Download size={14} aria-hidden="true" /><span>{t("provider.list.transfer.exportShort")}</span></button>
     {mode && <ProviderConfigTransferDialog mode={mode} onClose={() => setMode(null)} />}
   </>;
 }
@@ -122,7 +122,7 @@ function ProviderConfigTransferDialog({ mode, onClose }: DialogProps) {
           <span id={fileLabelId}>{t("provider.list.transfer.file")}</span>
           <div className="transfer-file">
             <span className={`transfer-file-name${file ? " is-selected" : ""}`} title={file?.name}>{file ? file.name : t("provider.list.transfer.fileEmpty")}</span>
-            <button type="button" className="secondary-button" disabled={busy} onClick={() => fileInput.current?.click()}><Upload size={13} />{file ? t("provider.list.transfer.changeFile") : t("provider.list.transfer.chooseFile")}</button>
+            <button type="button" className="secondary-button" disabled={busy} onClick={() => fileInput.current?.click()}>{file ? t("provider.list.transfer.changeFile") : t("provider.list.transfer.chooseFile")}</button>
             <input ref={fileInput} className="transfer-file-input" type="file" accept=".yillm,.json,application/json" tabIndex={-1} aria-labelledby={fileLabelId} onChange={onFile} />
           </div>
           <small className="field-hint">{t("provider.list.transfer.fileHint")}</small>

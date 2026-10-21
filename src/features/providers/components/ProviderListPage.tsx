@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Boxes, Cable, Check, LoaderCircle, LockKeyhole, Minus, Pencil, Plus, Power, RefreshCw, Search, Star, Trash2, X } from "lucide-react";
+import { Cable, Check, LoaderCircle, LockKeyhole, Minus, Pencil, Search, Star, Trash2, X } from "lucide-react";
 import { describeError } from "@/shared/api";
 import { useI18n } from "@/shared/i18n";
 import { PROTOCOLS, PROTOCOLS_BY_ID, type ProviderType } from "@/shared/lib";
@@ -75,14 +75,14 @@ export function ProviderListPage() {
     <section className="provider-list-page">
       <PageHeader eyebrow={t("provider.list.eyebrow")} title="Providers" subtitle={t("pageDescriptions.providers")} actions={
         <ProviderConfigTransfer disabled={loading || pending} />
-      } primaryAction={<button type="button" className="outline-action-button add-provider-button" disabled={loading || loadFailed || pending} onClick={() => edit(null)}><Plus size={17} />{t("provider.list.add")}</button>} />
+      } primaryAction={<button type="button" className="outline-action-button add-provider-button" disabled={loading || loadFailed || pending} onClick={() => edit(null)}>{t("provider.list.add")}</button>} />
       <div className="connection-toolbar">
         <div className="connection-filters" role="group" aria-label={t("provider.list.filterLabel")}>
           {(["all", "enabled", "disabled"] as const).map((id) => <button key={id} type="button" aria-pressed={filter === id} className={filter === id ? "selected" : ""} onClick={() => { setFilter(id); setPage(1); }}>{t(`provider.list.filter.${id}`)}<span>{counts[id]}</span></button>)}
         </div>
         <div className="connection-search"><Search size={15} /><input type="search" aria-label={t("provider.list.searchLabel")} placeholder={t("provider.list.searchPlaceholder")} value={search} onChange={(event) => { setSearch(event.target.value); setPage(1); }} />{search && <button type="button" title={t("provider.list.clearSearch")} aria-label={t("provider.list.clearSearch")} onClick={() => { setSearch(""); setPage(1); }}><X size={14} /></button>}</div>
       </div>
-      {loading && providers.length === 0 ? <div className="connection-empty"><LoaderCircle className="spinning" size={25} /><h2>{t("provider.list.loading")}</h2></div> : loadFailed ? <div className="connection-empty"><Cable size={30} /><h2>{t("provider.list.failedTitle")}</h2><button type="button" className="secondary-button" disabled={loading} onClick={() => void providersQuery.refetch()}><RefreshCw size={15} />{t("provider.list.reload")}</button></div> : providers.length === 0 ? <div className="connection-empty"><Cable size={32} /><h2>{t("provider.list.emptyTitle")}</h2><p className="connection-empty-hint">{t("pageDescriptions.providers")}</p></div> : <>
+      {loading && providers.length === 0 ? <div className="connection-empty"><LoaderCircle className="spinning" size={25} /><h2>{t("provider.list.loading")}</h2></div> : loadFailed ? <div className="connection-empty"><Cable size={30} /><h2>{t("provider.list.failedTitle")}</h2><button type="button" className="secondary-button" disabled={loading} onClick={() => void providersQuery.refetch()}>{t("provider.list.reload")}</button></div> : providers.length === 0 ? <div className="connection-empty"><Cable size={32} /><h2>{t("provider.list.emptyTitle")}</h2><p className="connection-empty-hint">{t("pageDescriptions.providers")}</p></div> : <>
         <div className="connection-table" aria-busy={loading}>
           <div className="connection-table-heading"><span>{t("provider.list.columns.connection")}</span><span>{t("provider.list.columns.protocols")}</span><span>{t("provider.list.columns.enabled")}</span><span>{t("provider.list.columns.actions")}</span></div>
           <div role="list" aria-label={t("provider.list.listLabel")}>
@@ -90,7 +90,7 @@ export function ProviderListPage() {
               const busy = loading || pendingId === provider.id;
               return <article className={`connection-row ${provider.enabled ? "" : "is-disabled"}`} key={provider.id} role="listitem" aria-busy={busy}>
                 <div className="connection-identity">
-                  <div className="connection-name"><span className="connection-brand-mark"><ProviderIcon provider={provider} size={24} /></span><button type="button" disabled={busy || pending} title={t("provider.list.editTitle", { name: provider.name })} onClick={() => edit(provider.id)}>{provider.name || t("provider.list.unnamed")}</button>{provider.is_default && <span className="connection-default" title={t("provider.list.defaultProvider")}><Star size={11} fill="currentColor" /></span>}<span className="connection-alias" title={provider.short_code}>{provider.short_code}</span><span className="connection-meta"><span><Boxes size={12} />{provider.models.length ? t("provider.list.modelCount", { count: provider.models.length }) : provider.is_default ? t("provider.list.defaultRoute") : t("provider.list.noModels")}</span>{busy && <LoaderCircle size={12} className="spinning" />}</span></div>
+                  <div className="connection-name"><span className="connection-brand-mark"><ProviderIcon provider={provider} size={24} /></span><button type="button" disabled={busy || pending} title={t("provider.list.editTitle", { name: provider.name })} onClick={() => edit(provider.id)}>{provider.name || t("provider.list.unnamed")}</button>{provider.is_default && <span className="connection-default" title={t("provider.list.defaultProvider")}><Star size={11} fill="currentColor" /></span>}<span className="connection-alias" title={provider.short_code}>{provider.short_code}</span><span className="connection-meta"><span>{provider.models.length ? t("provider.list.modelCount", { count: provider.models.length }) : provider.is_default ? t("provider.list.defaultRoute") : t("provider.list.noModels")}</span>{busy && <LoaderCircle size={12} className="spinning" />}</span></div>
                   <span className="connection-url" title={provider.base_url}>{provider.base_url}</span>
                 </div>
                 <div className="connection-protocols">
@@ -114,7 +114,7 @@ export function ProviderListPage() {
           </div>
           {visible.length === 0 && <div className="connection-no-results"><Search size={23} /><h2>{t("provider.list.noMatch")}</h2><button type="button" className="text-button" onClick={() => { setSearch(""); setFilter("all"); setPage(1); }}>{t("provider.list.clearFilters")}</button></div>}
         </div>
-        <ListPagination page={currentPage} count={visible.length} totalCount={providers.length} unit={t("provider.list.paginationUnit")} label={t("provider.list.paginationLabel")} onPage={setPage} disabled={loading || pending}><span><Power size={12} />{t("provider.list.enabledCount", { count: counts.enabled })}</span></ListPagination>
+        <ListPagination page={currentPage} count={visible.length} totalCount={providers.length} unit={t("provider.list.paginationUnit")} label={t("provider.list.paginationLabel")} onPage={setPage} disabled={loading || pending}><span><span className="proxy-status-dot running" aria-hidden="true" />{t("provider.list.enabledCount", { count: counts.enabled })}</span></ListPagination>
       </>}
       {deleteTarget && <ConfirmDialog destructive title={t("provider.list.delete.title", { name: deleteTarget.name || t("provider.list.unnamed") })} description={t("provider.list.delete.description", { count: deleteTarget.models.length, defaultNote: deleteTarget.is_default ? t("provider.list.delete.defaultNote") : "" })} confirmLabel={t("provider.list.delete.confirm")} error={deleteError} busy={pendingId === deleteTarget.id} onConfirm={remove} onCancel={() => setDeleteTarget(null)} />}
     </section>

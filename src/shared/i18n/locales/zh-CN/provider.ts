@@ -7,6 +7,8 @@ const provider = {
       transfer: {
         import: "导入配置",
         export: "导出配置",
+        importShort: "导入",
+        exportShort: "导出",
         importTitle: "导入 Provider 配置",
         exportTitle: "导出 Provider 配置",
         importDescription: "选择导出的配置文件，并输入创建文件时使用的加密字符串。文件中的 Provider 与模型会合并到本地，本地已有的标准模型不会被覆盖，其他连接不受影响。",
