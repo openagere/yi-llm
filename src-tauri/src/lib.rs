@@ -17,7 +17,9 @@ pub fn run() {
     tauri::Builder::default()
         .runtime(tauri_runtime_wry::Wry::default())
         .setup(|app| {
-            let state = app::bootstrap::build_state(&app.path().app_data_dir()?)?;
+            let legacy_data_dir = app.path().app_data_dir()?;
+            let data_dir = app::bootstrap::resolve_data_dir(&legacy_data_dir)?;
+            let state = app::bootstrap::build_state_with_legacy(&data_dir, Some(&legacy_data_dir))?;
             tauri::async_runtime::spawn(proxy::serve_managed(state.clone()));
             app.manage(state);
             Ok(())
